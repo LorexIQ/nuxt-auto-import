@@ -1,13 +1,13 @@
 import type { App } from 'vue';
-import type { FilesSearcherReturnBus, FilesSearcherReturnSuccess } from '../system/filesSeracher';
+import type { FilesSearcherReturnBus, FilesSearcherReturnSuccess } from './filesSeracher';
 
-export type AutoImportConfigFunctions = {
-  dataBuilder: (defines: FilesSearcherReturnSuccess[]) => any;
-  onAppCreating: (app: App<Element>, define: FilesSearcherReturnSuccess) => void;
+export type AutoImportConfigFunctions<T = any> = {
+  dataBuilder: (defines: FilesSearcherReturnSuccess<T>[]) => any;
+  onAppCreating: (app: App<Element>, define: FilesSearcherReturnSuccess<T>) => void;
 };
-export type AutoImportDefineConfig = AutoImportConfigFunctions & {
+export type AutoImportDefineConfig<T = any> = AutoImportConfigFunctions & {
   type: string;
-  data: any;
+  data: T;
 };
 
 export type AutoImportDefinesReturn = { [name: string]: FilesSearcherReturnBus[] };

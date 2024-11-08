@@ -6,7 +6,7 @@ import type {
 import filesSearcher from '../helpers/filesSearcher';
 import typeGenerator from '../helpers/typeGenerator';
 
-export default function (config: AutoImportConnector): AutoImportConnectorReturn {
+export default function<T>(config: AutoImportConnector): AutoImportConnectorReturn {
   const _config: Required<AutoImportConnector> = {
     onAppCreating() {},
 
@@ -31,7 +31,7 @@ export default function (config: AutoImportConnector): AutoImportConnectorReturn
         withRootIndexPrefix: _config.withRootIndexPrefix
       })).flat();
 
-      const connectorData = _config.dataBuilder(files as FilesSearcherReturnSuccess[]);
+      const connectorData = _config.dataBuilder(files as FilesSearcherReturnSuccess<T>[]);
 
       return {
         type: 'AutoImportConnector',

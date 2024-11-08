@@ -2,7 +2,7 @@ type Define = {
   [name: string]: string;
 };
 
-export default defineConnector({
+export default defineConnector<Define>({
   watchedPaths: [
     './assets/icons.ts',
     './assets/icons2.ts'

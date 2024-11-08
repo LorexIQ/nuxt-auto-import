@@ -15,8 +15,8 @@ export type FilesSearcherReturnBus = {
     camelCase: string;
   };
 };
-export type FilesSearcherReturnSuccess = FilesSearcherReturnBus & {
-  config: AutoImportDefineConfig;
+export type FilesSearcherReturnSuccess<T = any> = FilesSearcherReturnBus & {
+  config: AutoImportDefineConfig<T>;
 };
 export type FilesSearcherReturnError = {
   path: string;
