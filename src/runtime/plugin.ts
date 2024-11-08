@@ -1,25 +1,25 @@
 import type { App } from 'vue';
 import type {
-  AutoImportsConfig,
-  AutoImportsConfigDefine,
-  AutoImportsConfigFunctions,
-  AutoImportsDefinesType,
-  FilesSearcherReturnBus
+  AutoImportConfig,
+  AutoImportConfigDefine,
+  AutoImportConfigFunctions,
+  AutoImportDefinesType,
+  FilesSearcherReturnBus, ModuleOptionsExtend
 } from './types';
 // @ts-ignore
 import buildMeta from './buildMeta';
 import { defineNuxtPlugin, useRuntimeConfig } from '#imports';
 
-type ConnectorDefineType = [FilesSearcherReturnBus, AutoImportsConfig<any, any>];
+type ConnectorDefineType = [FilesSearcherReturnBus, AutoImportConfig<any, any>];
 type ConnectorDefinesType = ConnectorDefineType[];
-type ConnectorsType = { [name in AutoImportsDefinesType]: ConnectorDefinesType };
+type ConnectorsType = { [name: string]: ConnectorDefinesType };
 
 export default defineNuxtPlugin(async (nuxtApp) => {
-  const config = useRuntimeConfig().public.autoImports;
+  const config = useRuntimeConfig().public.autoImports as ModuleOptionsExtend;
   const vueApp = nuxtApp.vueApp;
-  const connectors = {} as ConnectorsType;
+  const connectorsData = {} as ConnectorsType;
 
-  for (const connectorFiles of Object.entries(config.files)) {
+  for (const connectorFiles of Object.entries(config.defines)) {
     const defines: ConnectorDefinesType = [];
 
     for (const file of connectorFiles[1] as FilesSearcherReturnBus[]) {
@@ -28,11 +28,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       defines.push([file, loadedFile]);
     }
 
-    (connectors as any)[connectorFiles[0]] = defines;
+    connectorsData[connectorFiles[0]] = defines;
   }
 
-  Object.entries(connectors).forEach(([key, defines]) => {
-    (config.connectors as any)[key] = defines.length ? defines[0][1].onDataBuilder(defines) : {};
+  Object.entries(connectorsData).forEach(([key, defines]) => {
+    config.data[key] = defines.length ? defines[0][1].onDataBuilder(defines) : {};
 
     defines.forEach((define) => {
       callStackFunctions('onAppCreating', vueApp, define);
@@ -40,7 +40,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   });
 });
 
-function callStackFunctions<T extends AutoImportsDefinesType>(funcName: keyof Omit<AutoImportsConfigFunctions<T, any>, 'onDataBuilder'>, appVue: App<Element>, define: AutoImportsConfigDefine<T, any>) {
+function callStackFunctions<T extends AutoImportDefinesType>(
+  funcName: keyof Omit<AutoImportConfigFunctions<T, any>, 'onDataBuilder'>,
+  appVue: App<Element>,
+  define: AutoImportConfigDefine<T, any>
+) {
   const func = define[1][funcName];
   if (func) func(appVue, define);
 }

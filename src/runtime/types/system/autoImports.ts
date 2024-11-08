@@ -1,31 +1,18 @@
 import type { App } from 'vue';
-import type { FilesSearcherReturnBus } from '../system/filesSeracher';
-import type { DefineDirectiveReturn, DefineIconsReturn } from '../connectors';
+import type { FilesSearcherReturnBus, FilesSearcherReturnSuccess } from '../system/filesSeracher';
 
-export type AutoImportsConfigDefine<T extends AutoImportsDefinesType, Data> = [FilesSearcherReturnBus, AutoImportsConfig<T, Data>];
-export type AutoImportsConfigFunctions<T extends AutoImportsDefinesType, Data> = {
-  onDataBuilder: (defines: AutoImportsConfigDefine<T, Data>[]) => any;
-  onAppCreating?: (app: App<Element>, define: AutoImportsConfigDefine<T, Data>) => void;
+export type AutoImportConfigFunctions = {
+  dataBuilder: (defines: FilesSearcherReturnSuccess[]) => any;
+  onAppCreating: (app: App<Element>, define: FilesSearcherReturnSuccess) => void;
 };
-export type AutoImportsConfig<T extends AutoImportsDefinesType, Data> = AutoImportsConfigFunctions<T, Data> & {
-  type: T;
-  data: Data;
+export type AutoImportDefineConfig = AutoImportConfigFunctions & {
+  type: string;
+  data: any;
 };
 
-export type AutoImportsDefinesTypeMapping = {
-  defineIcons: DefineIconsReturn<any>;
-  defineDirective: DefineDirectiveReturn<any>;
-};
-export type AutoImportsDefinesType = keyof AutoImportsDefinesTypeMapping;
-export type AutoImportsDefineConfigByType<T extends AutoImportsDefinesType> = AutoImportsDefinesTypeMapping[T];
+export type AutoImportDefinesReturn = { [name: string]: FilesSearcherReturnBus[] };
 
-export type AutoImportsReturn = {
-  files: { [name: string]: FilesSearcherReturnBus[] };
+export type AutoImportReturn = {
+  defines: AutoImportDefinesReturn;
   generateTypes: () => void;
-};
-
-export type ConnectorSystemReturn<T> = {
-  data: T;
-  files: FilesSearcherReturnBus[];
-  typeGenerator: (ctxPath: string) => void;
 };

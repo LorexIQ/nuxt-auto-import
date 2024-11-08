@@ -2,8 +2,7 @@ import { join } from 'node:path';
 import fs from 'node:fs';
 import { glob } from 'glob';
 import type {
-  AutoImportsDefineConfigByType,
-  AutoImportsDefinesType,
+  AutoImportDefineConfig,
   FilesSearcherConfig,
   FilesSearcherReturn
 } from '../types';
@@ -49,12 +48,12 @@ function toFirstUpper(text: string): string {
   else return `${text[0].toUpperCase()}${text.slice(1)}`;
 }
 
-function pathToFilesSearcherReturn<T extends AutoImportsDefinesType>(config: Required<FilesSearcherConfig<T>>, rootPath: string, filePath: string, cache: string[]): FilesSearcherReturn<T> {
+function pathToFilesSearcherReturn(config: Required<FilesSearcherConfig>, rootPath: string, filePath: string, cache: string[]): FilesSearcherReturn {
   const rootDirName = textToSplitParts(rootPath.split('\\').at(-1)!);
   const fileName = filePath.slice(rootPath.length + 1);
   const prefix = fileName.split('\\').slice(0, -1).map(part => textToSplitParts(part));
   const name = textToSplitParts(fileName.split('\\').at(-1)!.slice(0, -3));
-  const fileLoaded = require(filePath).default as AutoImportsDefineConfigByType<T>;
+  const fileLoaded = require(filePath).default as AutoImportDefineConfig;
 
   if (fileLoaded?.type !== config.defineType) return { path: filePath, error: 'define_is_not_found' };
   if (name.length === 1 && name[0] === 'index') {
@@ -86,8 +85,8 @@ function pathToFilesSearcherReturn<T extends AutoImportsDefinesType>(config: Req
   };
 }
 
-export default function<T extends AutoImportsDefinesType>(nitroConfig: any, config: FilesSearcherConfig<T>): FilesSearcherReturn<T>[] {
-  const _config: Required<FilesSearcherConfig<T>> = {
+export default function (nitroConfig: any, config: FilesSearcherConfig): FilesSearcherReturn[] {
+  const _config: Required<FilesSearcherConfig> = {
     deep: true,
     withRootIndexPrefix: false,
     pathPrefix: true,
@@ -104,7 +103,7 @@ export default function<T extends AutoImportsDefinesType>(nitroConfig: any, conf
   }, []);
 
   return watchedPaths
-    .map<FilesSearcherReturn<T>[]>((path) => {
+    .map<FilesSearcherReturn[]>((path) => {
       if (!fs.existsSync(path)) return [{ path, error: 'dir_is_not_found' }];
 
       const namesCache: string[] = [];

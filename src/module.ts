@@ -1,12 +1,12 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import { defineNuxtModule, addPlugin, createResolver, useLogger } from '@nuxt/kit';
+import { defineNuxtModule, createResolver, useLogger, addImportsDir } from '@nuxt/kit';
 import type { Nuxt } from '@nuxt/schema';
 import defu from 'defu';
-import type { FilesSearcherReturnBus, ModuleOptions } from './runtime/types';
-import { autoImportConnectors } from './runtime';
+import type { AutoImportDefinesReturn, ModuleOptions } from './runtime/types';
+import { AutoImport } from './runtime/autoImport';
 
-function createBuildMeta(rootDir: string, files: { [name: string]: FilesSearcherReturnBus[] }) {
+function createBuildMeta(rootDir: string, files: AutoImportDefinesReturn) {
   const filePath = path.join(__dirname, 'runtime', 'buildMeta.ts');
   const definesImports = Object
     .values(files)
@@ -29,10 +29,7 @@ function createBuildMeta(rootDir: string, files: { [name: string]: FilesSearcher
     })
     .join(',\n  ');
 
-  const fileContent
-    = `${definesImports}${definesImports.length ? '\n' : ''}
-export default {${connectorVariables.length ? `\n  ${connectorVariables}\n` : ''}};
-`;
+  const fileContent = `${definesImports}${definesImports.length ? '\n' : ''}export default {${connectorVariables.length ? `\n  ${connectorVariables}\n` : ''}};\n`;
 
   fs.writeFileSync(filePath, fileContent, 'utf-8');
 }
@@ -42,30 +39,28 @@ export default defineNuxtModule<ModuleOptions>({
     name: 'auto-import',
     configKey: 'autoImport'
   },
-  defaults: {},
+  defaults: {
+    connectors: []
+  },
   setup(options: Partial<ModuleOptions>, nuxt: Nuxt) {
+    // @ts-ignore
+    nuxt.options.runtimeConfig.public.autoImport = defu(nuxt.options.runtimeConfig.public.autoImport, options);
     const resolver = createResolver(import.meta.url);
-    nuxt.options.runtimeConfig.public.autoImports = defu(
-      nuxt.options.runtimeConfig.public.autoImports,
-      options
-    );
 
-    nuxt.hooks.hook('nitro:config', (config) => {
-      const autoImport = autoImportConnectors(config);
+    nuxt.hooks.hook('nitro:config', (nitroConfig) => {
+      const autoImport = new AutoImport(nitroConfig, nuxt.options.runtimeConfig.public.autoImport as any);
 
-      nuxt.options.runtimeConfig.public.autoImports = {
-        root: config.rootDir!,
-        files: autoImport.files,
-        connectors: Object.entries(autoImport.files).reduce((accum, connector) => ({ ...accum, [connector[0]]: {} }), {})
-      };
-
-      nuxt.hook('app:templatesGenerated', () => {
+      nuxt.hook('prepare:types', () => {
         useLogger('AutoImports').info('Generation AutoImports types...');
-        autoImport.generateTypes();
+        autoImport.typeGenerator();
       });
-      nuxt.hook('build:before', () => createBuildMeta(config.rootDir!, autoImport.files));
+      nuxt.hook('app:templatesGenerated', () => {
+      });
+      nuxt.hook('build:before', () => createBuildMeta(nitroConfig.rootDir!, autoImport.getDefines()));
     });
 
-    addPlugin(resolver.resolve('./runtime/plugin'));
+    // addPlugin(resolver.resolve('./runtime/plugin'));
+    addImportsDir(resolver.resolve('./runtime/composables'));
+    addImportsDir(resolver.resolve('./runtime/defines'));
   }
 });

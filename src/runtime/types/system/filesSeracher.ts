@@ -1,5 +1,5 @@
-import type { XOR } from '@B/types';
-import type { AutoImportsDefineConfigByType, AutoImportsDefinesType } from './autoImports';
+import type { AutoImportDefineConfig } from '../../types';
+import type { XOR } from './utils';
 
 type FilesSearcherErrors =
   | 'dir_is_not_found'
@@ -15,20 +15,20 @@ export type FilesSearcherReturnBus = {
     camelCase: string;
   };
 };
-type FilesSearcherReturnSuccess<T extends AutoImportsDefinesType> = FilesSearcherReturnBus & {
-  config: AutoImportsDefineConfigByType<T>;
+export type FilesSearcherReturnSuccess = FilesSearcherReturnBus & {
+  config: AutoImportDefineConfig;
 };
-type FilesSearcherReturnError = {
+export type FilesSearcherReturnError = {
   path: string;
   error: FilesSearcherErrors;
 };
 
-export type FilesSearcherConfig<T extends AutoImportsDefinesType> = {
-  defineType: T;
+export type FilesSearcherConfig = {
+  defineType: string;
   dirname: string;
   deep?: boolean;
   withRootIndexPrefix?: boolean;
   pathPrefix?: boolean;
   returnOnlySuccess?: boolean;
 };
-export type FilesSearcherReturn<T extends AutoImportsDefinesType> = XOR<FilesSearcherReturnSuccess<T>, FilesSearcherReturnError>;
+export type FilesSearcherReturn = XOR<FilesSearcherReturnSuccess, FilesSearcherReturnError>;

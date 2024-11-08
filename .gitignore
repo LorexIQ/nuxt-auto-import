@@ -56,4 +56,5 @@ Temporary Items
 .apdisk
 
 # Meta
-./src/runtime/buildMeta.ts
+/src/runtime/buildMeta.ts
+/src/runtime/defines
