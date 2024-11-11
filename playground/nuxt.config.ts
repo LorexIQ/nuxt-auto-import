@@ -12,7 +12,8 @@ export default defineNuxtConfig({
 
   autoImport: {
     connectors: [
-      './connectors/icons.ts'
+      './connectors/icons.ts',
+      './connectors/directives.ts'
     ]
   }
 });

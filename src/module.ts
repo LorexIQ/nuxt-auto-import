@@ -50,12 +50,7 @@ export default defineNuxtModule<ModuleOptions>({
     await autoImport.readConnectors();
 
     nuxt.options.runtimeConfig.public.autoImport = autoImport.getConfig();
-    console.log(nuxt.options.runtimeConfig.public.autoImport);
 
-    // nuxt.hook('prepare:types', () => {
-    //   useLogger('AutoImports').info('Generation AutoImports types...');
-    //   autoImport.typeGenerator();
-    // });
     nuxt.hook('app:templatesGenerated', () => {
       useLogger('AutoImports').info('Generation AutoImports types...');
       autoImport.typeGenerator();

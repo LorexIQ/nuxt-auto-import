@@ -49,21 +49,24 @@ export class AutoImport {
   }
 
   private async createDefiner(name: string, config: Required<AutoImportConnector>, content: string) {
-    const typeMatch = content.match(new RegExp(`type\\s+${config.defineConfigTypeName}\\s*=\\s*(\\{[\\s\\S]*?\\});`));
     const definesDir = this.resolver.resolve('runtime', 'defines');
     const defineName = `define${name[0].toUpperCase()}${name.slice(1)}`;
     const definePath = this.resolver.resolve('runtime', 'defines', `${name}.ts`);
-    let defineType = '';
 
     if (!fs.existsSync(definesDir)) fs.mkdirSync(definesDir);
-    if (typeMatch?.length) defineType = typeMatch[0];
 
+    const test = this.project.createSourceFile(`test123${name}.ts`, content);
     const sourceFile = this.project.createSourceFile(definePath, '', {
       overwrite: true
     });
 
-    sourceFile.addStatements('import type { AutoImportDefineConfig } from \'../types\';');
-    sourceFile.addStatements(defineType);
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: '../types',
+      isTypeOnly: true,
+      namedImports: ['AutoImportDefineConfig']
+    });
+    sourceFile.addImportDeclarations(test.getImportDeclarations().map(imp => imp.getStructure()));
+    sourceFile.addTypeAliases(test.getTypeAliases().map(tp => tp.getStructure()));
     sourceFile.addFunction({
       name: defineName,
       isExported: true,
@@ -81,7 +84,7 @@ export class AutoImport {
 
     sourceFile.saveSync();
 
-    (global as any)[defineName] = (await loadTsModule(definePath)).defineIcons;
+    (global as any)[defineName] = (await loadTsModule(definePath))[defineName];
   }
 
   async readConnectors() {

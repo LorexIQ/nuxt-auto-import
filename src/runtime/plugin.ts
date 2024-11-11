@@ -30,7 +30,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   }
 
   Object.entries(connectorsData).forEach(([key, defines]) => {
-    config.data[key] = defines.length ? defines[1].config.dataBuilder(defines) : {};
+    config.data[key] = defines.length ? defines[0].config.dataBuilder(defines) : {};
 
     defines.forEach((define) => {
       callStackFunctions('onAppCreating', vueApp, define);
