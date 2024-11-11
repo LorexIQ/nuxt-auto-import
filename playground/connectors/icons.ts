@@ -15,5 +15,8 @@ export default defineConnector<Define>({
   typeContent(data): string {
     const resultObjectKeys = Object.keys(data);
     return resultObjectKeys.length ? `\n  | '${resultObjectKeys.join('\'\n  | \'')}'` : ' {}';
+  },
+  onAppCreating(app) {
+    console.log('MOUNTED', app);
   }
 });

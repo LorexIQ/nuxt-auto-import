@@ -1,11 +1,13 @@
 import { join } from 'node:path';
 import fs from 'node:fs';
 import { glob } from 'glob';
+import type { Nuxt } from '@nuxt/schema';
 import type {
   AutoImportDefineConfig,
   FilesSearcherConfig,
   FilesSearcherReturn
 } from '../types';
+import loadTsModule from './loadTsModule';
 
 function checkIsFile(path: string) {
   return path.endsWith('.ts') && !path.endsWith('.d.ts');
@@ -48,12 +50,12 @@ function toFirstUpper(text: string): string {
   else return `${text[0].toUpperCase()}${text.slice(1)}`;
 }
 
-function pathToFilesSearcherReturn(config: Required<FilesSearcherConfig>, rootPath: string, filePath: string, cache: string[]): FilesSearcherReturn {
+async function pathToFilesSearcherReturn(config: Required<FilesSearcherConfig>, rootPath: string, filePath: string, cache: string[]): Promise<FilesSearcherReturn> {
   const rootDirName = textToSplitParts(rootPath.split('\\').at(-1)!);
   const fileName = filePath.slice(rootPath.length + 1);
   const prefix = fileName.split('\\').slice(0, -1).map(part => textToSplitParts(part));
   const name = textToSplitParts(fileName.split('\\').at(-1)!.slice(0, -3));
-  const fileLoaded = require(filePath).default as AutoImportDefineConfig;
+  const fileLoaded = (await loadTsModule(filePath)).default as AutoImportDefineConfig;
 
   if (fileLoaded?.type !== config.defineType) return { path: filePath, error: 'define_is_not_found' };
   if (name.length === 1 && name[0] === 'index') {
@@ -85,7 +87,7 @@ function pathToFilesSearcherReturn(config: Required<FilesSearcherConfig>, rootPa
   };
 }
 
-export default function (nitroConfig: any, config: FilesSearcherConfig): FilesSearcherReturn[] {
+export default async function (nuxtConfig: Nuxt, config: FilesSearcherConfig): Promise<FilesSearcherReturn[]> {
   const _config: Required<FilesSearcherConfig> = {
     deep: true,
     withRootIndexPrefix: false,
@@ -95,26 +97,28 @@ export default function (nitroConfig: any, config: FilesSearcherConfig): FilesSe
     ...config
   };
 
-  const nuxtExtends = (nitroConfig.appConfigFiles.map((path: string) => path!.replace('/app.config', '')) ?? []) as string[];
+  const nuxtExtends = nuxtConfig.options._layers.map(config => config.cwd) ?? [];
   const watchedPaths = nuxtExtends.reduce<string[]>((accum, path) => {
     const pattern = join(path, _config.dirname).replace(/\\/g, '/');
     const paths = glob.globSync(pattern);
     return [...accum, ...paths];
   }, []);
+  const files: FilesSearcherReturn[] = [];
 
-  return watchedPaths
-    .map<FilesSearcherReturn[]>((path) => {
-      if (!fs.existsSync(path)) return [{ path, error: 'dir_is_not_found' }];
+  for (const path of watchedPaths) {
+    if (!fs.existsSync(path)) return [{ path, error: 'dir_is_not_found' }];
 
-      const namesCache: string[] = [];
+    const namesCache: string[] = [];
 
-      if (checkIsFile(path)) {
-        const fileDir = path.split('\\').slice(0, -1)!.join('\\');
-        return [pathToFilesSearcherReturn(_config, fileDir, path, namesCache)];
-      } else {
-        return dirsReader(path, _config.deep).map(filePath => pathToFilesSearcherReturn(_config, path, filePath, namesCache));
+    if (checkIsFile(path)) {
+      const fileDir = path.split('\\').slice(0, -1)!.join('\\');
+      files.push(await pathToFilesSearcherReturn(_config, fileDir, path, namesCache));
+    } else {
+      for (const childPath of dirsReader(path, _config.deep)) {
+        files.push(await pathToFilesSearcherReturn(_config, path, childPath, namesCache));
       }
-    })
-    .flat()
-    .filter(searcherReturn => _config.returnOnlySuccess ? !searcherReturn.error : true);
+    }
+  }
+
+  return files.filter(searcherReturn => _config.returnOnlySuccess ? !searcherReturn.error : true);
 }

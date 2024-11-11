@@ -18,7 +18,8 @@
     "dist"
   ],
   "scripts": {
-    "prepack": "nuxt-module-build build",
+    "cleanDevMeta": "rimraf src/runtime/buildMeta.ts && rimraf src/runtime/defines",
+    "prepack": "npm run cleanDevMeta && nuxt-module-build build",
     "dev": "nuxi dev playground",
     "dev:build": "nuxi build playground",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
@@ -31,7 +32,11 @@
   },
   "dependencies": {
     "@nuxt/kit": "^3.14.159",
-    "glob": "^11.0.0"
+    "defu": "^6.1.4",
+    "esbuild": "^0.24.0",
+    "glob": "^11.0.0",
+    "ts-morph": "^24.0.0",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@nuxt/devtools": "^1.6.0",
@@ -40,10 +45,11 @@
     "@nuxt/schema": "^3.14.159",
     "@nuxt/test-utils": "^3.14.4",
     "@types/node": "latest",
+    "@vue/language-server": "^2.1.10",
     "changelogen": "^0.5.7",
     "eslint": "^9.14.0",
     "nuxt": "^3.14.159",
-    "ts-morph": "^24.0.0",
+    "rimraf": "^6.0.1",
     "typescript": "latest",
     "vitest": "^2.1.4",
     "vue-tsc": "^2.1.10"

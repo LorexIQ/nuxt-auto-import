@@ -1,3 +1,4 @@
 export default defineIcons({
-  Cluster: 'asdnasidaiobdioasoidbasoidnoiasbdoibnasoiudo'
+  Cluster: 'asdnasidaiobdioasoidbasoidnoiasbdoibnasoiudo',
+  Cluster2: 'asdnasidaiobdioasoidbasoidnoiasbdoibnasoiudo'
 });

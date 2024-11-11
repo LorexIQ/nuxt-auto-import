@@ -1,38 +1,36 @@
 import type { App } from 'vue';
 import type {
-  AutoImportConfig,
-  AutoImportConfigDefine,
   AutoImportConfigFunctions,
-  AutoImportDefinesType,
-  FilesSearcherReturnBus, ModuleOptionsExtend
+  FilesSearcherReturnSuccess,
+  ModuleOptionsExtend
 } from './types';
 // @ts-ignore
 import buildMeta from './buildMeta';
 import { defineNuxtPlugin, useRuntimeConfig } from '#imports';
 
-type ConnectorDefineType = [FilesSearcherReturnBus, AutoImportConfig<any, any>];
-type ConnectorDefinesType = ConnectorDefineType[];
+type ConnectorDefinesType = FilesSearcherReturnSuccess[];
 type ConnectorsType = { [name: string]: ConnectorDefinesType };
 
 export default defineNuxtPlugin(async (nuxtApp) => {
-  const config = useRuntimeConfig().public.autoImports as ModuleOptionsExtend;
+  const config = useRuntimeConfig().public.autoImport as ModuleOptionsExtend;
   const vueApp = nuxtApp.vueApp;
   const connectorsData = {} as ConnectorsType;
 
   for (const connectorFiles of Object.entries(config.defines)) {
     const defines: ConnectorDefinesType = [];
 
-    for (const file of connectorFiles[1] as FilesSearcherReturnBus[]) {
+    for (const file of connectorFiles[1]) {
       const loadedFile = (buildMeta as any)[file.id];
       loadedFile.data = typeof loadedFile.data === 'function' ? loadedFile.data() : loadedFile.data;
-      defines.push([file, loadedFile]);
+      file.config = loadedFile;
+      defines.push(file);
     }
 
     connectorsData[connectorFiles[0]] = defines;
   }
 
   Object.entries(connectorsData).forEach(([key, defines]) => {
-    config.data[key] = defines.length ? defines[0][1].onDataBuilder(defines) : {};
+    config.data[key] = defines.length ? defines[1].config.dataBuilder(defines) : {};
 
     defines.forEach((define) => {
       callStackFunctions('onAppCreating', vueApp, define);
@@ -40,11 +38,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   });
 });
 
-function callStackFunctions<T extends AutoImportDefinesType>(
-  funcName: keyof Omit<AutoImportConfigFunctions<T, any>, 'onDataBuilder'>,
+function callStackFunctions<T>(
+  funcName: keyof Omit<AutoImportConfigFunctions<T>, 'dataBuilder'>,
   appVue: App<Element>,
-  define: AutoImportConfigDefine<T, any>
+  define: FilesSearcherReturnSuccess<T>
 ) {
-  const func = define[1][funcName];
+  const func = define.config[funcName];
   if (func) func(appVue, define);
 }

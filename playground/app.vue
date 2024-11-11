@@ -1,6 +1,6 @@
 <template>
   <div>
-    Nuxt module playground!
+    {{ useRuntimeConfig().public.autoImport.data.icons }}
   </div>
 </template>
 

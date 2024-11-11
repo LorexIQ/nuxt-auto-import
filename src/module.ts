@@ -1,13 +1,13 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import { defineNuxtModule, createResolver, useLogger, addImportsDir } from '@nuxt/kit';
+import { defineNuxtModule, createResolver, useLogger, addImportsDir, addPlugin } from '@nuxt/kit';
 import type { Nuxt } from '@nuxt/schema';
 import defu from 'defu';
 import type { AutoImportDefinesReturn, ModuleOptions } from './runtime/types';
 import { AutoImport } from './runtime/autoImport';
 
 function createBuildMeta(rootDir: string, files: AutoImportDefinesReturn) {
-  const filePath = path.join(__dirname, 'runtime', 'buildMeta.ts');
+  const filePath = path.join(__dirname, 'runtime', 'buildMeta.js');
   const definesImports = Object
     .values(files)
     .flat()
@@ -42,25 +42,28 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: {
     connectors: []
   },
-  setup(options: Partial<ModuleOptions>, nuxt: Nuxt) {
+  async setup(options: Partial<ModuleOptions>, nuxt: Nuxt) {
     // @ts-ignore
     nuxt.options.runtimeConfig.public.autoImport = defu(nuxt.options.runtimeConfig.public.autoImport, options);
     const resolver = createResolver(import.meta.url);
+    const autoImport = new AutoImport(nuxt, resolver);
+    await autoImport.readConnectors();
 
-    nuxt.hooks.hook('nitro:config', (nitroConfig) => {
-      const autoImport = new AutoImport(nitroConfig, nuxt.options.runtimeConfig.public.autoImport as any);
+    nuxt.options.runtimeConfig.public.autoImport = autoImport.getConfig();
+    console.log(nuxt.options.runtimeConfig.public.autoImport);
 
-      nuxt.hook('prepare:types', () => {
-        useLogger('AutoImports').info('Generation AutoImports types...');
-        autoImport.typeGenerator();
-      });
-      nuxt.hook('app:templatesGenerated', () => {
-      });
-      nuxt.hook('build:before', () => createBuildMeta(nitroConfig.rootDir!, autoImport.getDefines()));
+    // nuxt.hook('prepare:types', () => {
+    //   useLogger('AutoImports').info('Generation AutoImports types...');
+    //   autoImport.typeGenerator();
+    // });
+    nuxt.hook('app:templatesGenerated', () => {
+      useLogger('AutoImports').info('Generation AutoImports types...');
+      autoImport.typeGenerator();
     });
+    nuxt.hook('build:before', () => createBuildMeta(nuxt.options.rootDir, autoImport.getDefines()));
 
-    // addPlugin(resolver.resolve('./runtime/plugin'));
-    addImportsDir(resolver.resolve('./runtime/composables'));
     addImportsDir(resolver.resolve('./runtime/defines'));
+    addImportsDir(resolver.resolve('./runtime/composables'));
+    addPlugin(resolver.resolve('./runtime/plugin'));
   }
 });

@@ -1,5 +1,5 @@
 import type { App } from 'vue';
-import type { FilesSearcherReturnBus, FilesSearcherReturnSuccess } from './filesSeracher';
+import type { FilesSearcherReturnSuccess } from './filesSeracher';
 
 export type AutoImportConfigFunctions<T = any> = {
   dataBuilder: (defines: FilesSearcherReturnSuccess<T>[]) => any;
@@ -10,7 +10,7 @@ export type AutoImportDefineConfig<T = any> = AutoImportConfigFunctions & {
   data: T;
 };
 
-export type AutoImportDefinesReturn = { [name: string]: FilesSearcherReturnBus[] };
+export type AutoImportDefinesReturn = { [name: string]: FilesSearcherReturnSuccess[] };
 
 export type AutoImportReturn = {
   defines: AutoImportDefinesReturn;

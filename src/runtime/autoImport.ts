@@ -1,51 +1,58 @@
 import fs from 'node:fs';
-import path, { join } from 'node:path';
-import { createResolver } from '@nuxt/kit';
+import path from 'node:path';
+import type { Resolver } from '@nuxt/kit';
 import { IndentationText, Project } from 'ts-morph';
+import type { Nuxt } from '@nuxt/schema';
 import type {
   AutoImportConnector,
   AutoImportConnectorFuncReturn,
-  AutoImportConnectorReturn, AutoImportConnectorTypeGenerator, AutoImportDefinesReturn,
+  AutoImportConnectorReturn,
+  AutoImportConnectorTypeGenerator,
+  AutoImportDefinesReturn,
   ModuleOptions,
   ModuleOptionsExtend
 } from './types';
 import defineConnector from './composables/defineConnector';
+import loadTsModule from './helpers/loadTsModule';
 
 export class AutoImport {
-  private resolver = createResolver(import.meta.url);
-  private project = new Project({
+  private readonly rootDir: string;
+  private readonly project = new Project({
     tsConfigFilePath: './tsconfig.json',
     manipulationSettings: {
       indentationText: IndentationText.TwoSpaces
     }
   });
 
-  private config: ModuleOptionsExtend;
-  private typeGeneratorListFunc: AutoImportConnectorTypeGenerator[] = [];
-  private connectors: AutoImportConnectorFuncReturn[] = [];
-  private defines: AutoImportDefinesReturn = {};
+  private readonly config: ModuleOptionsExtend;
+  private readonly typeGeneratorListFunc: AutoImportConnectorTypeGenerator[] = [];
+  private readonly connectors: AutoImportConnectorFuncReturn[] = [];
+  private readonly defines: AutoImportDefinesReturn = {};
 
-  constructor(private nitroConfig: any, config: ModuleOptions) {
-    this.config = this._initConfig(config);
-    this.readConnectors();
+  constructor(
+    private readonly nuxtConfig: Nuxt,
+    private readonly resolver: Resolver
+  ) {
+    this.rootDir = this.nuxtConfig.options.rootDir;
+    this.config = this._initConfig((nuxtConfig.options as any).autoImport);
   }
 
   private _initConfig(config: ModuleOptions): ModuleOptionsExtend {
     return {
-      rootDir: this.nitroConfig.rootDir!,
+      rootDir: this.rootDir,
       defines: {},
       data: {},
       connectors: config.connectors
         .filter(p => p.endsWith('.ts') && !p.endsWith('.d.ts'))
-        .map(p => path.resolve(this.nitroConfig.rootDir!, p))
+        .map(p => path.resolve(this.rootDir, p))
     };
   }
 
-  private createDefiner(name: string, config: Required<AutoImportConnector>, content: string) {
+  private async createDefiner(name: string, config: Required<AutoImportConnector>, content: string) {
     const typeMatch = content.match(new RegExp(`type\\s+${config.defineConfigTypeName}\\s*=\\s*(\\{[\\s\\S]*?\\});`));
-    const definesDir = this.resolver.resolve('./defines');
+    const definesDir = this.resolver.resolve('runtime', 'defines');
     const defineName = `define${name[0].toUpperCase()}${name.slice(1)}`;
-    const definePath = this.resolver.resolve(`./defines/${name}.ts`);
+    const definePath = this.resolver.resolve('runtime', 'defines', `${name}.ts`);
     let defineType = '';
 
     if (!fs.existsSync(definesDir)) fs.mkdirSync(definesDir);
@@ -74,41 +81,39 @@ export class AutoImport {
 
     sourceFile.saveSync();
 
-    (global as any)[defineName] = require(definePath).defineIcons;
+    (global as any)[defineName] = (await loadTsModule(definePath)).defineIcons;
   }
 
-  private readConnectors() {
+  async readConnectors() {
     const importedNames: string[] = [];
+    const defines: AutoImportDefinesReturn = {};
 
-    Object.assign(this.defines, this.config.connectors.reduce<AutoImportDefinesReturn>((accum, connectorPath) => {
-      if (!fs.existsSync(connectorPath)) return accum;
+    for (const connectorPath of this.config.connectors) {
+      if (!fs.existsSync(connectorPath)) continue;
 
       let connectorName = path.basename(connectorPath).split('.').slice(0, -1).join('.');
       const connectorContent = fs.readFileSync(connectorPath, 'utf-8');
 
       (global as any).defineConnector = defineConnector;
-      const connectorFile = require(connectorPath)?.default as AutoImportConnectorReturn;
+      const connectorFile = (await loadTsModule(connectorPath))?.default as AutoImportConnectorReturn;
 
-      if (!connectorFile) return accum;
+      if (!connectorFile) continue;
 
       connectorName = connectorFile.config.name || connectorName;
-      this.createDefiner(connectorName, connectorFile.config, connectorContent);
-      const executedFile = connectorFile.exe(this.nitroConfig, connectorName);
-      console.log(executedFile);
+      await this.createDefiner(connectorName, connectorFile.config, connectorContent);
+      const executedFile = await connectorFile.exe(this.nuxtConfig, connectorName);
 
-      if (executedFile.type !== 'AutoImportConnector' || importedNames.includes(connectorName)) return accum;
+      if (executedFile.type !== 'AutoImportConnector' || importedNames.includes(connectorName)) continue;
 
       importedNames.push(connectorName);
       this.connectors.push(executedFile);
       this.typeGeneratorListFunc.push(executedFile.typeGenerator);
 
-      return {
-        [connectorName]: executedFile.files,
-        ...accum
-      };
-    }, {}));
+      defines[connectorName] = executedFile.files;
+    }
 
-    console.log(this.defines);
+    Object.assign(this.defines, defines);
+    Object.assign(this.config.defines, defines);
   }
 
   getConnector() {
@@ -119,9 +124,13 @@ export class AutoImport {
     return this.defines;
   }
 
+  getConfig() {
+    return this.config;
+  }
+
   typeGenerator() {
-    const typesDir = join(this.nitroConfig.rootDir, 'types');
-    const autoImportsTypesDir = join(typesDir, 'autoImports');
+    const typesDir = path.join(this.rootDir, 'types');
+    const autoImportsTypesDir = path.join(typesDir, 'autoImports');
 
     if (!fs.existsSync(autoImportsTypesDir)) {
       if (!fs.existsSync(typesDir)) fs.mkdirSync(typesDir);
@@ -132,8 +141,8 @@ export class AutoImport {
 
     const filesTypes = fs
       .readdirSync(autoImportsTypesDir)
-      .filter(file => file !== 'index.ts' && !fs.lstatSync(join(autoImportsTypesDir, file)).isDirectory())
+      .filter(file => file !== 'index.ts' && !fs.lstatSync(path.join(autoImportsTypesDir, file)).isDirectory())
       .map(file => file.slice(0, -3));
-    fs.writeFileSync(join(autoImportsTypesDir, 'index.ts'), `${filesTypes.map(file => `export * from './${file}';`).join('\n')}\n`);
+    fs.writeFileSync(path.join(autoImportsTypesDir, 'index.ts'), `${filesTypes.map(file => `export * from './${file}';`).join('\n')}\n`);
   }
 }
