@@ -58,3 +58,4 @@ Temporary Items
 # Meta
 /src/runtime/buildMeta.*
 /src/runtime/defines
+/src/runtime/types/connectors

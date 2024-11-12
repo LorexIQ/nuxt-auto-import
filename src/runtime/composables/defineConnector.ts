@@ -1,14 +1,14 @@
 import type { Nuxt } from '@nuxt/schema';
 import type {
-  AutoImportConnector,
-  AutoImportConnectorReturn, FilesSearcherReturn,
-  FilesSearcherReturnSuccess
+  ModuleConnector,
+  ModuleConnectorReturn, ModuleFSReturn,
+  ModuleFSReturnSuccess
 } from '../types';
 import filesSearcher from '../helpers/filesSearcher';
 import typeGenerator from '../helpers/typeGenerator';
 
-export default function<T>(config: AutoImportConnector): AutoImportConnectorReturn {
-  const _config: Required<AutoImportConnector> = {
+export default function<T>(config: ModuleConnector): ModuleConnectorReturn {
+  const _config: Required<ModuleConnector> = {
     onAppCreating() {},
 
     name: '',
@@ -23,7 +23,7 @@ export default function<T>(config: AutoImportConnector): AutoImportConnectorRetu
   return {
     config: _config,
     exe: async (nuxtConfig: Nuxt, fileName: string) => {
-      const files: FilesSearcherReturn[] = [];
+      const files: ModuleFSReturn[] = [];
 
       for (const file of _config.watchedPaths) {
         files.push(...(await filesSearcher(nuxtConfig, {
@@ -36,12 +36,12 @@ export default function<T>(config: AutoImportConnector): AutoImportConnectorRetu
         })));
       }
 
-      const connectorData = _config.dataBuilder(files as FilesSearcherReturnSuccess<T>[]);
+      const connectorData = _config.dataBuilder(files as ModuleFSReturnSuccess<T>[]);
 
       return {
-        type: 'AutoImportConnector',
+        type: 'ModuleConnector',
         data: connectorData,
-        files: files.map(file => ({ id: file.id, path: file.path, fileName: file.fileName, name: file.name }) as FilesSearcherReturnSuccess),
+        files: files.map(file => ({ id: file.id, path: file.path, fileName: file.fileName, name: file.name }) as ModuleFSReturnSuccess),
         typeGenerator: ctxPath => typeGenerator(
           ctxPath,
           fileName,

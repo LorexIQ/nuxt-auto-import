@@ -1,14 +1,14 @@
 import type { App } from 'vue';
 import type {
-  AutoImportConfigFunctions,
-  FilesSearcherReturnSuccess,
+  ModuleDefineConfigFunctions,
+  ModuleFSReturnSuccess,
   ModuleOptionsExtend
 } from './types';
 // @ts-ignore
 import buildMeta from './buildMeta';
 import { defineNuxtPlugin, useRuntimeConfig } from '#imports';
 
-type ConnectorDefinesType = FilesSearcherReturnSuccess[];
+type ConnectorDefinesType = ModuleFSReturnSuccess[];
 type ConnectorsType = { [name: string]: ConnectorDefinesType };
 
 export default defineNuxtPlugin(async (nuxtApp) => {
@@ -39,9 +39,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 });
 
 function callStackFunctions<T>(
-  funcName: keyof Omit<AutoImportConfigFunctions<T>, 'dataBuilder'>,
+  funcName: keyof Omit<ModuleDefineConfigFunctions<T>, 'dataBuilder'>,
   appVue: App<Element>,
-  define: FilesSearcherReturnSuccess<T>
+  define: ModuleFSReturnSuccess<T>
 ) {
   const func = define.config[funcName];
   if (func) func(appVue, define);

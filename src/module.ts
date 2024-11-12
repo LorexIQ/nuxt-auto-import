@@ -3,10 +3,10 @@ import fs from 'node:fs';
 import { defineNuxtModule, createResolver, useLogger, addImportsDir, addPlugin } from '@nuxt/kit';
 import type { Nuxt } from '@nuxt/schema';
 import defu from 'defu';
-import type { AutoImportDefinesReturn, ModuleOptions } from './runtime/types';
-import { AutoImport } from './runtime/autoImport';
+import type { ModuleDefinesReturn, ModuleOptions } from './runtime/types';
+import { Module } from './runtime/autoImport';
 
-function createBuildMeta(rootDir: string, files: AutoImportDefinesReturn) {
+function createBuildMeta(rootDir: string, files: ModuleDefinesReturn) {
   const filePath = path.join(__dirname, 'runtime', 'buildMeta.js');
   const definesImports = Object
     .values(files)
@@ -47,8 +47,9 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.public.autoImport = defu(nuxt.options.runtimeConfig.public.autoImport, options);
 
     let updateTypesDelay: NodeJS.Timeout | undefined;
+    let lastTypesPaths: string[] = [];
     const resolver = createResolver(import.meta.url);
-    const autoImport = new AutoImport(nuxt, resolver);
+    const autoImport = new Module(nuxt, resolver);
     await autoImport.readConnectors();
 
     nuxt.options.runtimeConfig.public.autoImport = autoImport.getConfig();
@@ -61,13 +62,18 @@ export default defineNuxtModule<ModuleOptions>({
       updateTypesDelay = setTimeout(async () => {
         if (watchedPaths.includes(path.join(nuxt.options.rootDir, p))) {
           await autoImport.updateDefines();
-          autoImport.typeGenerator();
+          lastTypesPaths = autoImport.typeGenerator();
         }
       }, 500);
     });
+    nuxt.hook('prepare:types', (options) => {
+      for (const typePath of lastTypesPaths) {
+        options.references.push({ path: typePath });
+      }
+    });
     nuxt.hook('app:templatesGenerated', () => {
-      useLogger('AutoImports').info('Generation AutoImports types...');
-      autoImport.typeGenerator();
+      useLogger('Modules').info('Generation Modules types...');
+      lastTypesPaths = autoImport.typeGenerator();
     });
     nuxt.hook('build:before', () => createBuildMeta(nuxt.options.rootDir, autoImport.getDefines()));
 

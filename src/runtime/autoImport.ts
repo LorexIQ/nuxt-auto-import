@@ -1,33 +1,28 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Resolver } from '@nuxt/kit';
-import { IndentationText, Project } from 'ts-morph';
 import type { Nuxt } from '@nuxt/schema';
 import type {
-  AutoImportConnector,
-  AutoImportConnectorReturn,
-  AutoImportConnectorsReturn,
-  AutoImportConnectorTypeGenerator,
-  AutoImportDefinesReturn,
+  ModuleConnector,
+  ModuleConnectorReturn,
+  ModuleConnectorsReturn,
+  ModuleConnectorTypeGenerator,
+  ModuleDefinesReturn,
   ModuleOptions,
   ModuleOptionsExtend
 } from './types';
 import defineConnector from './composables/defineConnector';
 import loadTsModule from './helpers/loadTsModule';
+import getTsMorphProject from './helpers/getTsMorphProject';
 
-export class AutoImport {
+export class Module {
   private readonly rootDir: string;
-  private readonly project = new Project({
-    tsConfigFilePath: './tsconfig.json',
-    manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces
-    }
-  });
+  private readonly project = getTsMorphProject();
 
   private readonly config: ModuleOptionsExtend;
-  private readonly typeGeneratorListFunc: AutoImportConnectorTypeGenerator[] = [];
-  private readonly connectors: AutoImportConnectorsReturn = {};
-  private readonly defines: AutoImportDefinesReturn = {};
+  private readonly typeGeneratorListFunc: ModuleConnectorTypeGenerator[] = [];
+  private readonly connectors: ModuleConnectorsReturn = {};
+  private readonly defines: ModuleDefinesReturn = {};
 
   constructor(
     private readonly nuxtConfig: Nuxt,
@@ -48,7 +43,7 @@ export class AutoImport {
     };
   }
 
-  private async createDefiner(name: string, config: Required<AutoImportConnector>, content: string) {
+  private async createDefiner(name: string, config: Required<ModuleConnector>, content: string) {
     const definesDir = this.resolver.resolve('runtime', 'defines');
     const defineName = `define${name[0].toUpperCase()}${name.slice(1)}`;
     const definePath = this.resolver.resolve('runtime', 'defines', `${name}.ts`);
@@ -63,7 +58,7 @@ export class AutoImport {
     sourceFile.addImportDeclaration({
       moduleSpecifier: '../types',
       isTypeOnly: true,
-      namedImports: ['AutoImportDefineConfig']
+      namedImports: ['ModuleDefineConfig']
     });
     sourceFile.addImportDeclarations(test.getImportDeclarations().map(imp => imp.getStructure()));
     sourceFile.addTypeAliases(test.getTypeAliases().map(tp => tp.getStructure()));
@@ -71,7 +66,7 @@ export class AutoImport {
       name: defineName,
       isExported: true,
       parameters: [{ name: 'config', type: 'Define' }],
-      returnType: 'AutoImportDefineConfig',
+      returnType: 'ModuleDefineConfig',
       statements: [
         'return {',
         `  type: '${defineName}',`,
@@ -95,7 +90,7 @@ export class AutoImport {
       const connectorContent = fs.readFileSync(connectorPath, 'utf-8');
 
       (global as any).defineConnector = defineConnector;
-      const connectorFile = (await loadTsModule(connectorPath))?.default as AutoImportConnectorReturn;
+      const connectorFile = (await loadTsModule(connectorPath))?.default as ModuleConnectorReturn;
 
       if (!connectorFile) continue;
 
@@ -115,7 +110,7 @@ export class AutoImport {
     for (const [connectorName, file] of Object.entries(this.connectors)) {
       const executedFile = await file.exe(this.nuxtConfig, connectorName);
 
-      if (executedFile.type !== 'AutoImportConnector') continue;
+      if (executedFile.type !== 'ModuleConnector') continue;
 
       this.typeGeneratorListFunc.push(executedFile.typeGenerator);
       this.defines[connectorName] = executedFile.files;
@@ -137,20 +132,12 @@ export class AutoImport {
   }
 
   typeGenerator() {
-    const typesDir = path.join(this.rootDir, 'types');
-    const autoImportsTypesDir = path.join(typesDir, 'autoImports');
+    const typesDir = this.resolver.resolve('runtime', 'types', 'connectors');
 
-    if (!fs.existsSync(autoImportsTypesDir)) {
-      if (!fs.existsSync(typesDir)) fs.mkdirSync(typesDir);
-      fs.mkdirSync(autoImportsTypesDir);
-    }
+    if (!fs.existsSync(typesDir)) fs.mkdirSync(typesDir);
 
-    this.typeGeneratorListFunc.forEach(file => file(autoImportsTypesDir));
-
-    const filesTypes = fs
-      .readdirSync(autoImportsTypesDir)
-      .filter(file => file !== 'index.ts' && !fs.lstatSync(path.join(autoImportsTypesDir, file)).isDirectory())
-      .map(file => file.slice(0, -3));
-    fs.writeFileSync(path.join(autoImportsTypesDir, 'index.ts'), `${filesTypes.map(file => `export * from './${file}';`).join('\n')}\n`);
+    return this.typeGeneratorListFunc
+      .map(file => file(typesDir) as string)
+      .filter(Boolean);
   }
 }

@@ -1,12 +1,21 @@
-import type { AutoImportDefineConfig } from '../../types';
+import type { ModuleDefineConfig } from '../../types';
 import type { XOR } from './utils';
 
-type FilesSearcherErrors =
+type ModuleFSErrors =
   | 'dir_is_not_found'
   | 'root_index_is_not_supported'
   | 'name_duplicate'
   | 'define_is_not_found';
-export type FilesSearcherReturnBus = {
+
+export type ModuleFSConfig = {
+  defineType: string;
+  dirname: string;
+  deep?: boolean;
+  withRootIndexPrefix?: boolean;
+  pathPrefix?: boolean;
+  returnOnlySuccess?: boolean;
+};
+export type ModuleFSMetaReturn = {
   id: string;
   path: string;
   fileName: string;
@@ -15,20 +24,13 @@ export type FilesSearcherReturnBus = {
     camelCase: string;
   };
 };
-export type FilesSearcherReturnSuccess<T = any> = FilesSearcherReturnBus & {
-  config: AutoImportDefineConfig<T>;
+
+export type ModuleFSReturnSuccess<T = any> = ModuleFSMetaReturn & {
+  config: ModuleDefineConfig<T>;
 };
-export type FilesSearcherReturnError = {
+export type ModuleFSReturnError = {
   path: string;
-  error: FilesSearcherErrors;
+  error: ModuleFSErrors;
 };
 
-export type FilesSearcherConfig = {
-  defineType: string;
-  dirname: string;
-  deep?: boolean;
-  withRootIndexPrefix?: boolean;
-  pathPrefix?: boolean;
-  returnOnlySuccess?: boolean;
-};
-export type FilesSearcherReturn = XOR<FilesSearcherReturnSuccess, FilesSearcherReturnError>;
+export type ModuleFSReturn = XOR<ModuleFSReturnSuccess, ModuleFSReturnError>;

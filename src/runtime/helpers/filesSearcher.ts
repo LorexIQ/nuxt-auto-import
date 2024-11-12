@@ -3,9 +3,9 @@ import fs from 'node:fs';
 import { glob } from 'glob';
 import type { Nuxt } from '@nuxt/schema';
 import type {
-  AutoImportDefineConfig,
-  FilesSearcherConfig,
-  FilesSearcherReturn
+  ModuleDefineConfig,
+  ModuleFSConfig,
+  ModuleFSReturn
 } from '../types';
 import loadTsModule from './loadTsModule';
 
@@ -50,12 +50,12 @@ function toFirstUpper(text: string): string {
   else return `${text[0].toUpperCase()}${text.slice(1)}`;
 }
 
-async function pathToFilesSearcherReturn(config: Required<FilesSearcherConfig>, rootPath: string, filePath: string, cache: string[]): Promise<FilesSearcherReturn> {
+async function pathToModuleFSReturn(config: Required<ModuleFSConfig>, rootPath: string, filePath: string, cache: string[]): Promise<ModuleFSReturn> {
   const rootDirName = textToSplitParts(rootPath.split('\\').at(-1)!);
   const fileName = filePath.slice(rootPath.length + 1);
   const prefix = fileName.split('\\').slice(0, -1).map(part => textToSplitParts(part));
   const name = textToSplitParts(fileName.split('\\').at(-1)!.slice(0, -3));
-  const fileLoaded = (await loadTsModule(filePath)).default as AutoImportDefineConfig;
+  const fileLoaded = (await loadTsModule(filePath)).default as ModuleDefineConfig;
 
   if (fileLoaded?.type !== config.defineType) return { path: filePath, error: 'define_is_not_found' };
   if (name.length === 1 && name[0] === 'index') {
@@ -87,8 +87,8 @@ async function pathToFilesSearcherReturn(config: Required<FilesSearcherConfig>, 
   };
 }
 
-export default async function (nuxtConfig: Nuxt, config: FilesSearcherConfig): Promise<FilesSearcherReturn[]> {
-  const _config: Required<FilesSearcherConfig> = {
+export default async function (nuxtConfig: Nuxt, config: ModuleFSConfig): Promise<ModuleFSReturn[]> {
+  const _config: Required<ModuleFSConfig> = {
     deep: true,
     withRootIndexPrefix: false,
     pathPrefix: true,
@@ -103,7 +103,7 @@ export default async function (nuxtConfig: Nuxt, config: FilesSearcherConfig): P
     const paths = glob.globSync(pattern);
     return [...accum, ...paths];
   }, []);
-  const files: FilesSearcherReturn[] = [];
+  const files: ModuleFSReturn[] = [];
 
   for (const path of watchedPaths) {
     if (!fs.existsSync(path)) return [{ path, error: 'dir_is_not_found' }];
@@ -112,10 +112,10 @@ export default async function (nuxtConfig: Nuxt, config: FilesSearcherConfig): P
 
     if (checkIsFile(path)) {
       const fileDir = path.split('\\').slice(0, -1)!.join('\\');
-      files.push(await pathToFilesSearcherReturn(_config, fileDir, path, namesCache));
+      files.push(await pathToModuleFSReturn(_config, fileDir, path, namesCache));
     } else {
       for (const childPath of dirsReader(path, _config.deep)) {
-        files.push(await pathToFilesSearcherReturn(_config, path, childPath, namesCache));
+        files.push(await pathToModuleFSReturn(_config, path, childPath, namesCache));
       }
     }
   }

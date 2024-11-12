@@ -1,4 +1,4 @@
-import type { AutoImportDefinesReturn } from './system';
+import type { ModuleDefinesReturn } from './system';
 
 export * from './system';
 
@@ -8,6 +8,6 @@ export type ModuleOptions = {
 
 export type ModuleOptionsExtend = ModuleOptions & {
   rootDir: string;
-  defines: AutoImportDefinesReturn;
+  defines: ModuleDefinesReturn;
   data: { [name: string]: any };
 };

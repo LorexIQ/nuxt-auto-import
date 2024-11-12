@@ -18,7 +18,7 @@
     "dist"
   ],
   "scripts": {
-    "cleanDevMeta": "rimraf src/runtime/buildMeta.js && rimraf src/runtime/defines",
+    "cleanDevMeta": "rimraf src/runtime/buildMeta.js && rimraf src/runtime/defines && rimraf src/runtime/types/connectors",
     "prepack": "npm run cleanDevMeta && nuxt-module-build build",
     "dev": "nuxi dev playground",
     "dev:build": "nuxi build playground",
