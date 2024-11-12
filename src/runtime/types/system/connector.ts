@@ -28,3 +28,4 @@ export type AutoImportConnectorReturn = {
   config: Required<AutoImportConnector>;
   exe: (nuxtConfig: Nuxt, fileName: string) => Promise<AutoImportConnectorFuncReturn>;
 };
+export type AutoImportConnectorsReturn = { [name: string]: AutoImportConnectorReturn };

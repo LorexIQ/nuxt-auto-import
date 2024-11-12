@@ -45,12 +45,26 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(options: Partial<ModuleOptions>, nuxt: Nuxt) {
     // @ts-ignore
     nuxt.options.runtimeConfig.public.autoImport = defu(nuxt.options.runtimeConfig.public.autoImport, options);
+
+    let updateTypesDelay: NodeJS.Timeout | undefined;
     const resolver = createResolver(import.meta.url);
     const autoImport = new AutoImport(nuxt, resolver);
     await autoImport.readConnectors();
 
     nuxt.options.runtimeConfig.public.autoImport = autoImport.getConfig();
+    const watchedPaths = Object.values(autoImport.getDefines())
+      .flat()
+      .map(define => path.resolve(define.path));
 
+    nuxt.hook('builder:watch', (event, p) => {
+      clearTimeout(updateTypesDelay);
+      updateTypesDelay = setTimeout(async () => {
+        if (watchedPaths.includes(path.join(nuxt.options.rootDir, p))) {
+          await autoImport.updateDefines();
+          autoImport.typeGenerator();
+        }
+      }, 500);
+    });
     nuxt.hook('app:templatesGenerated', () => {
       useLogger('AutoImports').info('Generation AutoImports types...');
       autoImport.typeGenerator();

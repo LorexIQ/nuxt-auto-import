@@ -7,14 +7,18 @@ export default async function (modulePath: string) {
   const fullPath = path.resolve(modulePath);
   const tsCode = fs.readFileSync(fullPath, 'utf8');
 
-  const { code } = await esbuild.transform(tsCode, { loader: 'ts' });
+  try {
+    const { code } = await esbuild.transform(tsCode, { loader: 'ts' });
 
-  const tempJsFilePath = fullPath.replace(/\.ts$/, '.temp.js');
-  fs.writeFileSync(tempJsFilePath, code, 'utf8');
+    const tempJsFilePath = fullPath.replace(/\.ts$/, `.${Date.now()}.temp.js`);
+    fs.writeFileSync(tempJsFilePath, code, 'utf8');
 
-  const module = await import(pathToFileURL(tempJsFilePath).href);
+    const module = await import(pathToFileURL(tempJsFilePath).href);
 
-  fs.unlinkSync(tempJsFilePath);
+    fs.unlinkSync(tempJsFilePath);
 
-  return module;
+    return module;
+  } catch {
+    return undefined;
+  }
 }

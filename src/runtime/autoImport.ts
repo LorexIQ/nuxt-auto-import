@@ -5,8 +5,8 @@ import { IndentationText, Project } from 'ts-morph';
 import type { Nuxt } from '@nuxt/schema';
 import type {
   AutoImportConnector,
-  AutoImportConnectorFuncReturn,
   AutoImportConnectorReturn,
+  AutoImportConnectorsReturn,
   AutoImportConnectorTypeGenerator,
   AutoImportDefinesReturn,
   ModuleOptions,
@@ -26,7 +26,7 @@ export class AutoImport {
 
   private readonly config: ModuleOptionsExtend;
   private readonly typeGeneratorListFunc: AutoImportConnectorTypeGenerator[] = [];
-  private readonly connectors: AutoImportConnectorFuncReturn[] = [];
+  private readonly connectors: AutoImportConnectorsReturn = {};
   private readonly defines: AutoImportDefinesReturn = {};
 
   constructor(
@@ -88,9 +88,6 @@ export class AutoImport {
   }
 
   async readConnectors() {
-    const importedNames: string[] = [];
-    const defines: AutoImportDefinesReturn = {};
-
     for (const connectorPath of this.config.connectors) {
       if (!fs.existsSync(connectorPath)) continue;
 
@@ -104,19 +101,27 @@ export class AutoImport {
 
       connectorName = connectorFile.config.name || connectorName;
       await this.createDefiner(connectorName, connectorFile.config, connectorContent);
-      const executedFile = await connectorFile.exe(this.nuxtConfig, connectorName);
-
-      if (executedFile.type !== 'AutoImportConnector' || importedNames.includes(connectorName)) continue;
-
-      importedNames.push(connectorName);
-      this.connectors.push(executedFile);
-      this.typeGeneratorListFunc.push(executedFile.typeGenerator);
-
-      defines[connectorName] = executedFile.files;
+      this.connectors[connectorName] = connectorFile;
     }
 
-    Object.assign(this.defines, defines);
-    Object.assign(this.config.defines, defines);
+    await this.updateDefines();
+  }
+
+  async updateDefines() {
+    Object.keys(this.defines).forEach(key => delete this.defines[key]);
+    Object.keys(this.config.defines).forEach(key => delete this.config.defines[key]);
+    this.typeGeneratorListFunc.splice(0);
+
+    for (const [connectorName, file] of Object.entries(this.connectors)) {
+      const executedFile = await file.exe(this.nuxtConfig, connectorName);
+
+      if (executedFile.type !== 'AutoImportConnector') continue;
+
+      this.typeGeneratorListFunc.push(executedFile.typeGenerator);
+      this.defines[connectorName] = executedFile.files;
+    }
+
+    Object.assign(this.config.defines, this.defines);
   }
 
   getConnector() {
