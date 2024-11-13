@@ -1,13 +1,17 @@
 import path from 'node:path';
+import fs from 'node:fs';
 import type { WriterFunction } from 'ts-morph';
 import getTsMorphProject from './getTsMorphProject';
 
-export default function (typesDir: string, typeName: string, content: string | WriterFunction) {
+export default function (typesDir: string, typeName: string, content: string | WriterFunction, tryRead = false) {
   if (typeName.length === 0) return;
   if (typeName.length === 1) typeName = typeName.toUpperCase();
 
   const filePath = path.join(typesDir, `${typeName}.d.ts`);
   const isWriter = typeof content === 'function';
+
+  if (tryRead && fs.existsSync(filePath)) return filePath;
+
   const project = getTsMorphProject();
   const file = project.createSourceFile(filePath, '', { overwrite: true });
 

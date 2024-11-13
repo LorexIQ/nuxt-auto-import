@@ -3,8 +3,8 @@ export default defineNuxtConfig({
     './base'
   ],
 
-  modules: ['../src/module'],
-  // modules: ['../dist'],
+  // modules: ['../src/module'],
+  modules: ['../dist'],
   ssr: false,
   devtools: { enabled: true },
 

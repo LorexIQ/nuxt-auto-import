@@ -42,10 +42,11 @@ export default function<T>(config: ModuleConnector): ModuleConnectorReturn {
         type: 'ModuleConnector',
         data: connectorData,
         files: files.map(file => ({ id: file.id, path: file.path, fileName: file.fileName, name: file.name }) as ModuleFSReturnSuccess),
-        typeGenerator: ctxPath => typeGenerator(
+        typeGenerator: (ctxPath, tryRead) => typeGenerator(
           ctxPath,
           fileName,
-          _config.typeContent(connectorData)
+          _config.typeContent(connectorData),
+          tryRead
         )
       };
     }

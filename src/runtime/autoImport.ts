@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Resolver } from '@nuxt/kit';
 import type { Nuxt } from '@nuxt/schema';
+import { resolveAlias } from '@nuxt/kit';
 import type {
   ModuleConnector,
   ModuleConnectorReturn,
@@ -14,6 +15,7 @@ import type {
 import defineConnector from './composables/defineConnector';
 import loadTsModule from './helpers/loadTsModule';
 import getTsMorphProject from './helpers/getTsMorphProject';
+import pathRelativeMove from './helpers/pathRelativeMove';
 
 export class Module {
   private readonly rootDir: string;
@@ -43,25 +45,28 @@ export class Module {
     };
   }
 
-  private async createDefiner(name: string, config: Required<ModuleConnector>, content: string) {
+  private async createDefiner(name: string, config: Required<ModuleConnector>, connectorPath: string, content: string) {
     const definesDir = this.resolver.resolve('runtime', 'defines');
     const defineName = `define${name[0].toUpperCase()}${name.slice(1)}`;
     const definePath = this.resolver.resolve('runtime', 'defines', `${name}.ts`);
 
     if (!fs.existsSync(definesDir)) fs.mkdirSync(definesDir);
 
-    const test = this.project.createSourceFile(`test123${name}.ts`, content);
-    const sourceFile = this.project.createSourceFile(definePath, '', {
-      overwrite: true
-    });
+    const parsedConnector = this.project.createSourceFile(`${name}.${Date.now()}.temp.ts`, content);
+    const sourceFile = this.project.createSourceFile(definePath, '', { overwrite: true });
 
     sourceFile.addImportDeclaration({
       moduleSpecifier: '../types',
       isTypeOnly: true,
       namedImports: ['ModuleDefineConfig']
     });
-    sourceFile.addImportDeclarations(test.getImportDeclarations().map(imp => imp.getStructure()));
-    sourceFile.addTypeAliases(test.getTypeAliases().map(tp => tp.getStructure()));
+    sourceFile.addImportDeclarations(parsedConnector.getImportDeclarations().map((imp) => {
+      const structure = imp.getStructure();
+      const filePath = resolveAlias(structure.moduleSpecifier);
+      structure.moduleSpecifier = filePath === structure.moduleSpecifier ? filePath : pathRelativeMove(filePath, connectorPath, definePath);
+      return structure;
+    }));
+    sourceFile.addTypeAliases(parsedConnector.getTypeAliases().map(tp => tp.getStructure()));
     sourceFile.addFunction({
       name: defineName,
       isExported: true,
@@ -95,7 +100,7 @@ export class Module {
       if (!connectorFile) continue;
 
       connectorName = connectorFile.config.name || connectorName;
-      await this.createDefiner(connectorName, connectorFile.config, connectorContent);
+      await this.createDefiner(connectorName, connectorFile.config, connectorPath, connectorContent);
       this.connectors[connectorName] = connectorFile;
     }
 
@@ -131,13 +136,13 @@ export class Module {
     return this.config;
   }
 
-  typeGenerator() {
+  typeGenerator(tryRead = false) {
     const typesDir = this.resolver.resolve('runtime', 'types', 'connectors');
 
     if (!fs.existsSync(typesDir)) fs.mkdirSync(typesDir);
 
     return this.typeGeneratorListFunc
-      .map(file => file(typesDir) as string)
+      .map(file => file(typesDir, tryRead) as string)
       .filter(Boolean);
   }
 }

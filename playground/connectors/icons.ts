@@ -1,4 +1,6 @@
-type Define = {
+import type { TestType } from 'assets/types';
+
+type Define = TestType & {
   [name: string]: string;
 };
 

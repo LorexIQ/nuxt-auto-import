@@ -27,5 +27,5 @@ export type ModuleConnectorReturn = {
   exe: (nuxtConfig: Nuxt, fileName: string) => Promise<ModuleConnectorFuncReturn>;
 };
 
-export type ModuleConnectorTypeGenerator = (ctxPath: string) => string | undefined;
+export type ModuleConnectorTypeGenerator = (ctxPath: string, tryRead?: boolean) => string | undefined;
 export type ModuleConnectorsReturn = { [name: string]: ModuleConnectorReturn };

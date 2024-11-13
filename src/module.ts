@@ -47,7 +47,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.public.autoImport = defu(nuxt.options.runtimeConfig.public.autoImport, options);
 
     let updateTypesDelay: NodeJS.Timeout | undefined;
-    let lastTypesPaths: string[] = [];
     const resolver = createResolver(import.meta.url);
     const autoImport = new Module(nuxt, resolver);
     await autoImport.readConnectors();
@@ -62,18 +61,19 @@ export default defineNuxtModule<ModuleOptions>({
       updateTypesDelay = setTimeout(async () => {
         if (watchedPaths.includes(path.join(nuxt.options.rootDir, p))) {
           await autoImport.updateDefines();
-          lastTypesPaths = autoImport.typeGenerator();
+          autoImport.typeGenerator();
         }
       }, 500);
     });
     nuxt.hook('prepare:types', (options) => {
-      for (const typePath of lastTypesPaths) {
-        options.references.push({ path: typePath });
-      }
+      options.tsConfig.include = [
+        ...(options.tsConfig.include || []),
+        ...autoImport.typeGenerator(true).map(p => createResolver(p).resolve())
+      ];
     });
     nuxt.hook('app:templatesGenerated', () => {
       useLogger('Modules').info('Generation Modules types...');
-      lastTypesPaths = autoImport.typeGenerator();
+      autoImport.typeGenerator();
     });
     nuxt.hook('build:before', () => createBuildMeta(nuxt.options.rootDir, autoImport.getDefines()));
 
