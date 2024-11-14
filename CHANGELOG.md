@@ -1,6 +1,20 @@
 # Changelog
 
 
+## v1.1.1
+
+[compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.1.0...v1.1.1)
+
+### 🩹 Fixes
+
+- Исправлен CHANGELOG.md ([707f41e](https://github.com/LorexIQ/nuxt-auto-import/commit/707f41e))
+- Исправлен CHANGELOG.md" ([8d25070](https://github.com/LorexIQ/nuxt-auto-import/commit/8d25070))
+- Изменён способ сохранения meta данных ([ac91ed3](https://github.com/LorexIQ/nuxt-auto-import/commit/ac91ed3))
+
+### ❤️ Contributors
+
+- LorexIQ <i@liq-mail.ru>
+
 ## v1.1.0
 
 
