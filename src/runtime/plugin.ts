@@ -13,11 +13,11 @@ type ConnectorsType = { [name: string]: ConnectorDefinesType };
 
 export default defineNuxtPlugin(async (nuxtApp) => {
   const runtimeConfig = useRuntimeConfig().public.autoImport as ModuleOptionsExtend;
-  const config = useState(runtimeConfig.configStateKey, () => runtimeConfig);
+  nuxtApp.provide(runtimeConfig.configStateKey, runtimeConfig);
   const vueApp = nuxtApp.vueApp;
   const connectorsData = {} as ConnectorsType;
 
-  for (const connectorFiles of Object.entries(config.value.defines)) {
+  for (const connectorFiles of Object.entries(runtimeConfig.defines)) {
     const defines: ConnectorDefinesType = [];
 
     for (const file of connectorFiles[1]) {
@@ -31,7 +31,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   }
 
   Object.entries(connectorsData).forEach(([key, defines]) => {
-    config.value.data[key] = defines.length ? defines[0].config.dataBuilder(defines) : {};
+    runtimeConfig.data[key] = defines.length ? defines[0].config.dataBuilder(defines) : {};
 
     defines.forEach((define) => {
       callStackFunctions('onAppCreating', vueApp, define);
