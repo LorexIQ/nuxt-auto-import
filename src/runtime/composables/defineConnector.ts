@@ -1,4 +1,3 @@
-import type { Nuxt } from '@nuxt/schema';
 import type {
   ModuleConnector,
   ModuleConnectorReturn, ModuleFSReturn,
@@ -6,6 +5,7 @@ import type {
 } from '../types';
 import filesSearcher from '../helpers/filesSearcher';
 import typeGenerator from '../helpers/typeGenerator';
+import type { ModuleClass } from '../autoImport';
 
 export default function<T>(config: ModuleConnector): ModuleConnectorReturn {
   const _config: Required<ModuleConnector> = {
@@ -22,11 +22,11 @@ export default function<T>(config: ModuleConnector): ModuleConnectorReturn {
 
   return {
     config: _config,
-    exe: async (nuxtConfig: Nuxt, fileName: string) => {
+    exe: async (ctx: ModuleClass, fileName: string) => {
       const files: ModuleFSReturn[] = [];
 
       for (const file of _config.watchedPaths) {
-        files.push(...(await filesSearcher(nuxtConfig, {
+        files.push(...(await filesSearcher(ctx, {
           defineType: `define${fileName[0].toUpperCase()}${fileName.slice(1)}`,
           dirname: file,
           deep: _config.deep,

@@ -1,7 +1,7 @@
 import type { App } from 'vue';
-import type { Nuxt } from '@nuxt/schema';
 import type { WriterFunction } from 'ts-morph';
 import type { ModuleFSReturnSuccess } from '../../types';
+import type { ModuleClass } from '../../autoImport';
 
 export type ModuleConnector = {
   watchedPaths: string[];
@@ -24,7 +24,7 @@ export type ModuleConnectorFuncReturn = {
 };
 export type ModuleConnectorReturn = {
   config: Required<ModuleConnector>;
-  exe: (nuxtConfig: Nuxt, fileName: string) => Promise<ModuleConnectorFuncReturn>;
+  exe: (ctx: ModuleClass, fileName: string) => Promise<ModuleConnectorFuncReturn>;
 };
 
 export type ModuleConnectorTypeGenerator = (ctxPath: string, tryRead?: boolean) => string | undefined;

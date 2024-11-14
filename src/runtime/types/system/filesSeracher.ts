@@ -2,6 +2,7 @@ import type { ModuleDefineConfig } from '../../types';
 import type { XOR } from './utils';
 
 type ModuleFSErrors =
+  | 'file_is_not_found'
   | 'dir_is_not_found'
   | 'root_index_is_not_supported'
   | 'name_duplicate'

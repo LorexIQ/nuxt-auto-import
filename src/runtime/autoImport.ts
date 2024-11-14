@@ -20,6 +20,7 @@ import pathRelativeMove from './helpers/pathRelativeMove';
 export class Module {
   private readonly rootDir: string;
   private readonly project = getTsMorphProject();
+  private readonly debugEnabled: boolean;
 
   private readonly config: ModuleOptionsExtend;
   private readonly typeGeneratorListFunc: ModuleConnectorTypeGenerator[] = [];
@@ -30,6 +31,7 @@ export class Module {
     private readonly nuxtConfig: Nuxt,
     private readonly resolver: Resolver
   ) {
+    this.debugEnabled = process.env.AUTO_IMPORT_DEBUG === '1';
     this.rootDir = this.nuxtConfig.options.rootDir;
     this.config = this._initConfig(nuxtConfig.options.runtimeConfig.public.autoImport as ModuleOptions);
   }
@@ -114,7 +116,7 @@ export class Module {
     this.typeGeneratorListFunc.splice(0);
 
     for (const [connectorName, file] of Object.entries(this.connectors)) {
-      const executedFile = await file.exe(this.nuxtConfig, connectorName);
+      const executedFile = await file.exe(this, connectorName);
 
       if (executedFile.type !== 'ModuleConnector') continue;
 
@@ -135,6 +137,14 @@ export class Module {
 
   getConfig() {
     return this.config;
+  }
+
+  getNuxtConfig() {
+    return this.nuxtConfig;
+  }
+
+  isDebug() {
+    return this.debugEnabled;
   }
 
   createConnectorsTypes(tryRead = false) {
@@ -175,3 +185,5 @@ export class Module {
     fs.writeFileSync(filePath, fileContent, 'utf-8');
   }
 }
+
+export type ModuleClass = Module;

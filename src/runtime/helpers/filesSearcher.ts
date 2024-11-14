@@ -1,12 +1,13 @@
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import fs from 'node:fs';
 import { glob } from 'glob';
-import type { Nuxt } from '@nuxt/schema';
+import { useLogger } from '@nuxt/kit';
 import type {
   ModuleDefineConfig,
   ModuleFSConfig,
   ModuleFSReturn
 } from '../types';
+import type { ModuleClass } from '../autoImport';
 import loadTsModule from './loadTsModule';
 
 function checkIsFile(path: string) {
@@ -38,8 +39,6 @@ function dirsReader(path: string, deep = false): string[] {
 function textToSplitParts(text: string) {
   return text
     .split(/(?=[A-Z])/)
-    .join('_')
-    .split('_')
     .filter(Boolean)
     .map(part => part.toLowerCase());
 }
@@ -51,12 +50,13 @@ function toFirstUpper(text: string): string {
 }
 
 async function pathToModuleFSReturn(config: Required<ModuleFSConfig>, rootPath: string, filePath: string, cache: string[]): Promise<ModuleFSReturn> {
-  const rootDirName = textToSplitParts(rootPath.split('\\').at(-1)!);
+  const rootDirName = textToSplitParts(rootPath.split(sep).at(-1)!);
   const fileName = filePath.slice(rootPath.length + 1);
-  const prefix = fileName.split('\\').slice(0, -1).map(part => textToSplitParts(part));
-  const name = textToSplitParts(fileName.split('\\').at(-1)!.slice(0, -3));
-  const fileLoaded = (await loadTsModule(filePath)).default as ModuleDefineConfig;
+  const prefix = fileName.split(sep).slice(0, -1).map(part => textToSplitParts(part));
+  const name = textToSplitParts(fileName.split(sep).at(-1)!.slice(0, -3));
+  const fileLoaded = (await loadTsModule(filePath))?.default as ModuleDefineConfig;
 
+  if (!fileLoaded) return { path: filePath, error: 'file_is_not_found' };
   if (fileLoaded?.type !== config.defineType) return { path: filePath, error: 'define_is_not_found' };
   if (name.length === 1 && name[0] === 'index') {
     if (prefix.length) {
@@ -87,7 +87,7 @@ async function pathToModuleFSReturn(config: Required<ModuleFSConfig>, rootPath: 
   };
 }
 
-export default async function (nuxtConfig: Nuxt, config: ModuleFSConfig): Promise<ModuleFSReturn[]> {
+export default async function (ctx: ModuleClass, config: ModuleFSConfig): Promise<ModuleFSReturn[]> {
   const _config: Required<ModuleFSConfig> = {
     deep: true,
     withRootIndexPrefix: false,
@@ -97,7 +97,8 @@ export default async function (nuxtConfig: Nuxt, config: ModuleFSConfig): Promis
     ...config
   };
 
-  const nuxtExtends = nuxtConfig.options._layers.map(config => config.cwd) ?? [];
+  const logger = useLogger('AutoImport');
+  const nuxtExtends = ctx.getNuxtConfig().options._layers.map(config => config.cwd) ?? [];
   const watchedPaths = nuxtExtends.reduce<string[]>((accum, path) => {
     const pattern = join(path, _config.dirname).replace(/\\/g, '/');
     const paths = glob.globSync(pattern);
@@ -110,12 +111,16 @@ export default async function (nuxtConfig: Nuxt, config: ModuleFSConfig): Promis
 
     const namesCache: string[] = [];
 
-    if (checkIsFile(path)) {
-      const fileDir = path.split('\\').slice(0, -1)!.join('\\');
-      files.push(await pathToModuleFSReturn(_config, fileDir, path, namesCache));
+    if (fs.statSync(path).isFile()) {
+      const fileDir = path.split(sep).slice(0, -1)!.join(sep);
+      const loadedFile = await pathToModuleFSReturn(_config, fileDir, path, namesCache);
+      if (ctx.isDebug() && loadedFile.error) logger.warn(`Error loading file '${loadedFile.path}'`);
+      files.push(loadedFile);
     } else {
       for (const childPath of dirsReader(path, _config.deep)) {
-        files.push(await pathToModuleFSReturn(_config, path, childPath, namesCache));
+        const loadedFile = await pathToModuleFSReturn(_config, path, childPath, namesCache);
+        if (ctx.isDebug() && loadedFile.error) logger.warn(`Error loading file '${loadedFile.path}'`);
+        files.push(loadedFile);
       }
     }
   }
