@@ -1,3 +1,3 @@
 export default defineIcons({
-  Window: 'dsa'
+  Window: 'window-icon'
 });

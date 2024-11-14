@@ -31,7 +31,7 @@ export class Module {
     private readonly resolver: Resolver
   ) {
     this.rootDir = this.nuxtConfig.options.rootDir;
-    this.config = this._initConfig((nuxtConfig.options as any).autoImport);
+    this.config = this._initConfig(nuxtConfig.options.runtimeConfig.public.autoImport as ModuleOptions);
   }
 
   private _initConfig(config: ModuleOptions): ModuleOptionsExtend {
@@ -39,6 +39,7 @@ export class Module {
       rootDir: this.rootDir,
       defines: {},
       data: {},
+      configStateKey: config.configStateKey!,
       connectors: config.connectors
         .filter(p => p.endsWith('.ts') && !p.endsWith('.d.ts'))
         .map(p => path.resolve(this.rootDir, p))
@@ -147,7 +148,7 @@ export class Module {
   }
 
   createBuildMeta() {
-    const filePath = path.join(__dirname, 'runtime', 'buildMeta.js');
+    const filePath = this.resolver.resolve('runtime', 'buildMeta.js');
     const definesImports = Object
       .values(this.defines)
       .flat()

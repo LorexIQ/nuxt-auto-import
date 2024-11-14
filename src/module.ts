@@ -13,6 +13,7 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'autoImport'
   },
   defaults: {
+    configStateKey: 'autoImportModule:config',
     connectors: []
   },
   async setup(options: Partial<ModuleOptions>, nuxt: Nuxt) {

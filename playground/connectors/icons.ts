@@ -1,4 +1,4 @@
-import type { TestType } from '@/assets/types';
+import type { TestType } from '@/base/types';
 
 type Define = TestType & {
   [name: string]: string;
@@ -7,7 +7,7 @@ type Define = TestType & {
 export default defineConnector<Define>({
   watchedPaths: [
     './assets/icons.ts',
-    './assets/icons2.ts'
+    './icons'
   ],
   dataBuilder(files) {
     const resultObject = {};

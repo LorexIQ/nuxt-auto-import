@@ -18,6 +18,6 @@ export default defineConnector<Define>({
     return resultObjectKeys.length ? `\n  | '${resultObjectKeys.join('\'\n  | \'')}'` : ' {}';
   },
   onAppCreating(app, define) {
-    console.log('MOUNTED Directive', define);
+    app.directive(define.name.camelCase, define.config.data);
   }
 });
