@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v1.1.2
+
+[compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.1.1...v1.1.2)
+
+### 🩹 Fixes
+
+- Исправлена конфигурация публикации ([ff4ec11](https://github.com/LorexIQ/nuxt-auto-import/commit/ff4ec11))
+- Исправлена ошибка зависимостей функции useAutoImport ([a93bd37](https://github.com/LorexIQ/nuxt-auto-import/commit/a93bd37))
+
+### ❤️ Contributors
+
+- LorexIQ <i@liq-mail.ru>
+
 ## v1.1.1
 
 [compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.1.0...v1.1.1)
