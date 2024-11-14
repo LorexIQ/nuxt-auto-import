@@ -1,5 +1,5 @@
 {
-  "name": "@lorexiq/nuxt-auto-import",
+  "name": "nuxt-auto-import",
   "version": "1.1.1",
   "keywords": [
     "vue",
@@ -10,9 +10,6 @@
     "simpfy structure"
   ],
   "description": "Importing any data at the build stage into the client",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LorexIQ/nuxt-auto-import.git"
