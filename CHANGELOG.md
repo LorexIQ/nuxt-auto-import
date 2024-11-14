@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v1.2.0
+
+[compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.1.2...v1.2.0)
+
+### 🚀 Enhancements
+
+- Добавлен debug режим. (см. документацию) ([59d94cc](https://github.com/LorexIQ/nuxt-auto-import/commit/59d94cc))
+
+### 🩹 Fixes
+
+- Исправлен builder путей ([f94f073](https://github.com/LorexIQ/nuxt-auto-import/commit/f94f073))
+- Исправлена сборка из-за ошибок зависимости useLogger ([605babc](https://github.com/LorexIQ/nuxt-auto-import/commit/605babc))
+
+### ❤️ Contributors
+
+- LorexIQ <i@liq-mail.ru>
+
 ## v1.1.2
 
 [compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.1.1...v1.1.2)
