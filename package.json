@@ -1,8 +1,27 @@
 {
-  "name": "my-module",
+  "name": "nuxt-auto-import",
   "version": "1.0.0",
-  "description": "My new Nuxt module",
-  "repository": "your-org/my-module",
+  "keywords": [
+    "vue",
+    "nuxt",
+    "nuxt3",
+    "nuxt-module",
+    "auto import",
+    "simpfy structure"
+  ],
+  "description": "Importing any data at the build stage into the client",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LorexIQ/nuxt-auto-import.git"
+  },
+  "author": {
+    "name": "LorexIQ",
+    "email": "dmitrymurashko0@gmail.com",
+    "url": "https://lorexiq.ru"
+  },
+  "bugs": {
+    "url": "https://github.com/LorexIQ/nuxt-auto-import/issues"
+  },
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -25,10 +44,7 @@
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
     "release": "npm run lint && npm run test && npm run prepack && changelogen --release && npm publish && git push --follow-tags",
     "lint": "eslint . --config eslint.config.mjs",
-    "lint:fix": "eslint . --config eslint.config.mjs --fix",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
-    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
+    "lint:fix": "eslint . --config eslint.config.mjs --fix"
   },
   "dependencies": {
     "@nuxt/kit": "^3.14.159",
@@ -43,7 +59,6 @@
     "@nuxt/eslint-config": "^0.6.1",
     "@nuxt/module-builder": "^0.8.4",
     "@nuxt/schema": "^3.14.159",
-    "@nuxt/test-utils": "^3.14.4",
     "@types/node": "latest",
     "@vue/language-server": "^2.1.10",
     "changelogen": "^0.5.7",
@@ -51,7 +66,6 @@
     "nuxt": "^3.14.159",
     "rimraf": "^6.0.1",
     "typescript": "latest",
-    "vitest": "^2.1.4",
     "vue-tsc": "^2.1.10"
   }
 }

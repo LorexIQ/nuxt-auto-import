@@ -1,42 +1,15 @@
 import path from 'node:path';
-import fs from 'node:fs';
+import defu from 'defu';
 import { defineNuxtModule, createResolver, useLogger, addImportsDir, addPlugin } from '@nuxt/kit';
 import type { Nuxt } from '@nuxt/schema';
-import defu from 'defu';
-import type { ModuleDefinesReturn, ModuleOptions } from './runtime/types';
+import { name, version } from '../package.json';
+import type { ModuleOptions } from './runtime/types';
 import { Module } from './runtime/autoImport';
-
-function createBuildMeta(rootDir: string, files: ModuleDefinesReturn) {
-  const filePath = path.join(__dirname, 'runtime', 'buildMeta.js');
-  const definesImports = Object
-    .values(files)
-    .flat()
-    .map((define) => {
-      const defineRootPath = define.path
-        .slice(rootDir!.length)
-        .replaceAll('\\', '/')
-        .split('.')
-        .slice(0, -1)
-        .join('.');
-      return `import ${define.id} from '@${defineRootPath}';`;
-    })
-    .join('\n');
-  const connectorVariables = Object
-    .values(files)
-    .flat()
-    .map((define) => {
-      return `${define.id}`;
-    })
-    .join(',\n  ');
-
-  const fileContent = `${definesImports}${definesImports.length ? '\n' : ''}export default {${connectorVariables.length ? `\n  ${connectorVariables}\n` : ''}};\n`;
-
-  fs.writeFileSync(filePath, fileContent, 'utf-8');
-}
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'auto-import',
+    name,
+    version,
     configKey: 'autoImport'
   },
   defaults: {
@@ -61,21 +34,21 @@ export default defineNuxtModule<ModuleOptions>({
       updateTypesDelay = setTimeout(async () => {
         if (watchedPaths.includes(path.join(nuxt.options.rootDir, p))) {
           await autoImport.updateDefines();
-          autoImport.typeGenerator();
+          autoImport.createConnectorsTypes();
         }
       }, 500);
     });
     nuxt.hook('prepare:types', (options) => {
       options.tsConfig.include = [
         ...(options.tsConfig.include || []),
-        ...autoImport.typeGenerator(true).map(p => createResolver(p).resolve())
+        ...autoImport.createConnectorsTypes(true).map(p => createResolver(p).resolve())
       ];
     });
     nuxt.hook('app:templatesGenerated', () => {
       useLogger('Modules').info('Generation Modules types...');
-      autoImport.typeGenerator();
+      autoImport.createConnectorsTypes();
     });
-    nuxt.hook('build:before', () => createBuildMeta(nuxt.options.rootDir, autoImport.getDefines()));
+    nuxt.hook('build:before', () => autoImport.createBuildMeta());
 
     addImportsDir(resolver.resolve('./runtime/defines'));
     addImportsDir(resolver.resolve('./runtime/composables'));

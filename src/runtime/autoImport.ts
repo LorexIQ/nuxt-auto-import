@@ -136,7 +136,7 @@ export class Module {
     return this.config;
   }
 
-  typeGenerator(tryRead = false) {
+  createConnectorsTypes(tryRead = false) {
     const typesDir = this.resolver.resolve('runtime', 'types', 'connectors');
 
     if (!fs.existsSync(typesDir)) fs.mkdirSync(typesDir);
@@ -144,5 +144,33 @@ export class Module {
     return this.typeGeneratorListFunc
       .map(file => file(typesDir, tryRead) as string)
       .filter(Boolean);
+  }
+
+  createBuildMeta() {
+    const filePath = path.join(__dirname, 'runtime', 'buildMeta.js');
+    const definesImports = Object
+      .values(this.defines)
+      .flat()
+      .map((define) => {
+        const defineRootPath = define.path
+          .slice(this.rootDir.length)
+          .replaceAll('\\', '/')
+          .split('.')
+          .slice(0, -1)
+          .join('.');
+        return `import ${define.id} from '@${defineRootPath}';`;
+      })
+      .join('\n');
+    const connectorVariables = Object
+      .values(this.defines)
+      .flat()
+      .map((define) => {
+        return `${define.id}`;
+      })
+      .join(',\n  ');
+
+    const fileContent = `${definesImports}${definesImports.length ? '\n' : ''}export default {${connectorVariables.length ? `\n  ${connectorVariables}\n` : ''}};\n`;
+
+    fs.writeFileSync(filePath, fileContent, 'utf-8');
   }
 }
