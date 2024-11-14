@@ -8,6 +8,7 @@ import type {
 } from '../types';
 import type { ModuleClass } from '../autoImport';
 import loadTsModule from './loadTsModule';
+import logger from './logger';
 
 function checkIsFile(path: string) {
   return path.endsWith('.ts') && !path.endsWith('.d.ts');
@@ -112,12 +113,12 @@ export default async function (ctx: ModuleClass, config: ModuleFSConfig): Promis
     if (fs.statSync(path).isFile()) {
       const fileDir = path.split(sep).slice(0, -1)!.join(sep);
       const loadedFile = await pathToModuleFSReturn(_config, fileDir, path, namesCache);
-      if (ctx.isDebug() && loadedFile.error) ctx.getLogger().warn(`Error loading define file: '${loadedFile.path}'.`);
+      if (ctx.isDebug() && loadedFile.error) logger.warn(`Error loading define file: '${loadedFile.path}'.`);
       files.push(loadedFile);
     } else {
       for (const childPath of dirsReader(path, _config.deep)) {
         const loadedFile = await pathToModuleFSReturn(_config, path, childPath, namesCache);
-        if (ctx.isDebug() && loadedFile.error) ctx.getLogger().warn(`Error loading define file: '${loadedFile.path}'.`);
+        if (ctx.isDebug() && loadedFile.error) logger.warn(`Error loading define file: '${loadedFile.path}'.`);
         files.push(loadedFile);
       }
     }

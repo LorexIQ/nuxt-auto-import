@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { type Resolver, useLogger } from '@nuxt/kit';
+import type { Resolver } from '@nuxt/kit';
 import type { Nuxt } from '@nuxt/schema';
 import { resolveAlias } from '@nuxt/kit';
 import type {
@@ -16,12 +16,12 @@ import defineConnector from './composables/defineConnector';
 import loadTsModule from './helpers/loadTsModule';
 import getTsMorphProject from './helpers/getTsMorphProject';
 import pathRelativeMove from './helpers/pathRelativeMove';
+import logger from './helpers/logger';
 
 export class Module {
   private readonly rootDir: string;
   private readonly debugEnabled: boolean;
   private readonly project = getTsMorphProject();
-  private readonly logger = useLogger('AutoImport');
 
   private readonly config: ModuleOptionsExtend;
   private readonly typeGeneratorListFunc: ModuleConnectorTypeGenerator[] = [];
@@ -94,7 +94,7 @@ export class Module {
   async readConnectors() {
     for (const connectorPath of this.config.connectors) {
       if (!fs.existsSync(connectorPath)) {
-        this.logger.warn(`Connector file wasn't found: '${connectorPath}'.`);
+        logger.warn(`Connector file wasn't found: '${connectorPath}'.`);
         continue;
       }
 
@@ -105,7 +105,7 @@ export class Module {
       const connectorFile = (await loadTsModule(connectorPath))?.default as ModuleConnectorReturn;
 
       if (!connectorFile) {
-        this.logger.warn(`Error loading connector file: '${connectorPath}'.`);
+        logger.warn(`Error loading connector file: '${connectorPath}'.`);
         continue;
       }
 
@@ -148,10 +148,6 @@ export class Module {
 
   getNuxtConfig() {
     return this.nuxtConfig;
-  }
-
-  getLogger() {
-    return this.logger;
   }
 
   isDebug() {
