@@ -1,7 +1,6 @@
 import { join, sep } from 'node:path';
 import fs from 'node:fs';
 import { glob } from 'glob';
-import { useLogger } from '@nuxt/kit';
 import type {
   ModuleDefineConfig,
   ModuleFSConfig,
@@ -97,7 +96,6 @@ export default async function (ctx: ModuleClass, config: ModuleFSConfig): Promis
     ...config
   };
 
-  const logger = useLogger('AutoImport');
   const nuxtExtends = ctx.getNuxtConfig().options._layers.map(config => config.cwd) ?? [];
   const watchedPaths = nuxtExtends.reduce<string[]>((accum, path) => {
     const pattern = join(path, _config.dirname).replace(/\\/g, '/');
@@ -114,12 +112,12 @@ export default async function (ctx: ModuleClass, config: ModuleFSConfig): Promis
     if (fs.statSync(path).isFile()) {
       const fileDir = path.split(sep).slice(0, -1)!.join(sep);
       const loadedFile = await pathToModuleFSReturn(_config, fileDir, path, namesCache);
-      if (ctx.isDebug() && loadedFile.error) logger.warn(`Error loading file '${loadedFile.path}'`);
+      if (ctx.isDebug() && loadedFile.error) ctx.getLogger().warn(`Error loading define file: '${loadedFile.path}'.`);
       files.push(loadedFile);
     } else {
       for (const childPath of dirsReader(path, _config.deep)) {
         const loadedFile = await pathToModuleFSReturn(_config, path, childPath, namesCache);
-        if (ctx.isDebug() && loadedFile.error) logger.warn(`Error loading file '${loadedFile.path}'`);
+        if (ctx.isDebug() && loadedFile.error) ctx.getLogger().warn(`Error loading define file: '${loadedFile.path}'.`);
         files.push(loadedFile);
       }
     }

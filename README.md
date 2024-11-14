@@ -213,6 +213,12 @@ After launching the application, it became available to use `v-outside` more wit
 
 After initializing the connectors (`npm run dev` or `nuxi prepare`), global `AutoImport{{connector.name}}` format types will become available.
 
+## Debug
+
+The Debug mode allows you to track in the server console which files have not been uploaded.
+
+Just add `AUTO_IMPORT_DEBUG=1` to your `.env`.
+
 ## Development
 
 - Run `npm run dev:prepare` to generate type stubs.
