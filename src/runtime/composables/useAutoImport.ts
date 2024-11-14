@@ -1,4 +1,5 @@
 import type { ModuleOptionsExtend } from '../types';
+import { useRuntimeConfig, useNuxtApp } from '#imports';
 
 export default function () {
   const runtimeConfig = useRuntimeConfig().public.autoImport as ModuleOptionsExtend;
