@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.2.1
+
+[compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.2.0...v1.2.1)
+
+### 🩹 Fixes
+
+- Добавлено удаление зависимых импортов в cjs и ускорен ts-morph ([24925ba](https://github.com/LorexIQ/nuxt-auto-import/commit/24925ba))
+
+### ❤️ Contributors
+
+- LorexIQ <i@liq-mail.ru>
+
 ## v1.2.0
 
 [compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.1.2...v1.2.0)
