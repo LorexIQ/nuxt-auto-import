@@ -10,7 +10,17 @@ function clearTemp(tempPath: string, file?: SourceFile) {
   if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
   file && tsMorphProject.removeSourceFile(file);
 }
+function isFileExists(filePath: string) {
+  const checkedTypes = ['.ts', '.js'];
 
+  for (const checkedType of checkedTypes) {
+    if (fs.existsSync(filePath + checkedType)) {
+      return filePath + checkedType;
+    }
+  }
+
+  return undefined;
+}
 function getImportPath(ctxPath: string, p: string) {
   const asAliasResolve = resolveAlias(p);
   const asPathResolve = path.resolve(ctxPath, p);
@@ -19,12 +29,13 @@ function getImportPath(ctxPath: string, p: string) {
   const importPath = isRelativePath ? asPathResolve : asAliasResolve;
 
   if (isAliasPath || isRelativePath) {
-    if (fs.existsSync(importPath + '.ts')) return importPath + '.ts';
-    else if (fs.existsSync(importPath + '\\index.ts')) return importPath + '\\index.ts';
-    else return undefined;
-  } else {
-    return undefined;
+    let fileExists = isFileExists(importPath);
+
+    if (!fileExists) fileExists = isFileExists(path.join(importPath, 'index'));
+    if (fileExists) return fileExists;
   }
+
+  return undefined;
 }
 
 export default async function loadTsModule(modulePath: string) {
@@ -49,7 +60,8 @@ export default async function loadTsModule(modulePath: string) {
     clearTemp(tempJsFilePath, sourceFile);
 
     return module;
-  } catch {
+  } catch (e) {
+    console.error(e);
     clearTemp(tempJsFilePath, sourceFile);
     return undefined;
   }
