@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import type { WriterFunction } from 'ts-morph';
-import getTsMorphProject from './getTsMorphProject';
+import tsMorphProject from './tsMorphProject';
 
 export default function (typesDir: string, typeName: string, content: string | WriterFunction, tryRead = false) {
   if (typeName.length === 0) return;
@@ -12,8 +12,7 @@ export default function (typesDir: string, typeName: string, content: string | W
 
   if (tryRead && fs.existsSync(filePath)) return filePath;
 
-  const project = getTsMorphProject();
-  const file = project.createSourceFile(filePath, '', { overwrite: true });
+  const file = tsMorphProject.createSourceFile(filePath, '', { overwrite: true });
 
   file.addStatements((writer) => {
     writer.write('declare global').block(() => {

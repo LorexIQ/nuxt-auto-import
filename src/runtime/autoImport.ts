@@ -14,14 +14,13 @@ import type {
 } from './types';
 import defineConnector from './composables/defineConnector';
 import loadTsModule from './helpers/loadTsModule';
-import getTsMorphProject from './helpers/getTsMorphProject';
+import tsMorphProject from './helpers/tsMorphProject';
 import pathRelativeMove from './helpers/pathRelativeMove';
 import logger from './helpers/logger';
 
 export class Module {
   private readonly rootDir: string;
   private readonly debugEnabled: boolean;
-  private readonly project = getTsMorphProject();
 
   private readonly config: ModuleOptionsExtend;
   private readonly typeGeneratorListFunc: ModuleConnectorTypeGenerator[] = [];
@@ -56,8 +55,8 @@ export class Module {
 
     if (!fs.existsSync(definesDir)) fs.mkdirSync(definesDir);
 
-    const parsedConnector = this.project.createSourceFile(`${name}.${Date.now()}.temp.ts`, content);
-    const sourceFile = this.project.createSourceFile(definePath, '', { overwrite: true });
+    const parsedConnector = tsMorphProject.createSourceFile(`${name}.temp.ts`, content, { overwrite: true });
+    const sourceFile = tsMorphProject.createSourceFile(definePath, '', { overwrite: true });
 
     sourceFile.addImportDeclaration({
       moduleSpecifier: '../types',
