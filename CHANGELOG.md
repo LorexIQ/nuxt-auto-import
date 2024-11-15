@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.2.2
+
+[compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.2.1...v1.2.2)
+
+### 🩹 Fixes
+
+- Исправлена ошибка при сборке в docker ([0742cc8](https://github.com/LorexIQ/nuxt-auto-import/commit/0742cc8))
+
+### ❤️ Contributors
+
+- LorexIQ <i@liq-mail.ru>
+
 ## v1.2.1
 
 [compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.2.0...v1.2.1)
