@@ -224,6 +224,19 @@ Just add `AUTO_IMPORT_DEBUG=1` to your `.env`.
 - Run `npm run dev:prepare` to generate type stubs.
 - Use `npm run dev` to start playground in development mode.
 
+## Deploy
+
+
+Deploy the application on the Edge with [NuxtHub](https://hub.nuxt.com) on your Cloudflare account:
+
+```bash
+npm run deploy
+```
+
+Then checkout your server logs, analaytics and more in the [NuxtHub Admin](https://admin.hub.nuxt.com).
+
+You can also deploy using [Cloudflare Pages CI](https://hub.nuxt.com/docs/getting-started/deploy#cloudflare-pages-ci).
+
 ## License
 
 [MIT License](./LICENSE)

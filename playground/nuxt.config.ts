@@ -3,9 +3,13 @@ export default defineNuxtConfig({
     './base'
   ],
 
-  modules: ['../src/module'],
-  // modules: ['../dist'],
+  modules: [
+    '../src/module',
+    '@nuxthub/core'
+  ],
+
   ssr: false,
+
   devtools: { enabled: true },
 
   compatibilityDate: '2024-11-11',
