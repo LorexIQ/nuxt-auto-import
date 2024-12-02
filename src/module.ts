@@ -39,11 +39,8 @@ export default defineNuxtModule<ModuleOptions>({
         }
       }, 500);
     });
-    nuxt.hook('prepare:types', (options) => {
-      options.tsConfig.include = [
-        ...(options.tsConfig.include || []),
-        ...autoImport.createConnectorsTypes(true).map(p => createResolver(p).resolve())
-      ];
+    nuxt.hook('prepare:types', () => {
+      autoImport.createConnectorsTypes(true);
     });
     nuxt.hook('app:templatesGenerated', () => {
       useLogger('Modules').info('Generation Modules types...');

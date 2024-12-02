@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import type { AutoImportIcons } from '../../dist/types';
+
 const autoImport = useAutoImport();
 const icons = autoImport.defines.icons;
 
 // example use AutoImport type
-const item = {} as AutoImportIcons;
+const item = 'Cluster' as AutoImportIcons;
 console.log(item);
 
 const clicksInside = ref(0);

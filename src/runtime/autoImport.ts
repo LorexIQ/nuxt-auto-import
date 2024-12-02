@@ -155,12 +155,31 @@ export class Module {
 
   createConnectorsTypes(tryRead = false) {
     const typesDir = this.resolver.resolve('runtime', 'types', 'connectors');
+    const typesIndexFile = this.resolver.resolve('types.d.ts');
 
     if (!fs.existsSync(typesDir)) fs.mkdirSync(typesDir);
 
-    return this.typeGeneratorListFunc
+    const filesPaths = this.typeGeneratorListFunc
       .map(file => file(typesDir, tryRead) as string)
       .filter(Boolean);
+
+    if (fs.existsSync(typesIndexFile)) {
+      const connectorsRelativePath = './runtime/types/connectors/';
+      const indexFile = tsMorphProject.createSourceFile(typesIndexFile, fs.readFileSync(typesIndexFile, 'utf-8'), { overwrite: true });
+      indexFile.getExportDeclarations().forEach((statement) => {
+        const typePath = statement.getModuleSpecifierValue();
+        if (typePath && typePath.startsWith(connectorsRelativePath)) statement.remove();
+      });
+      indexFile.addStatements(filesPaths
+        .map((filePath) => {
+          const relativePath = filePath.slice(typesDir.length + 1);
+          return `export * from '${connectorsRelativePath}${relativePath.replace('.ts', '')}'`;
+        })
+        .join('\n'));
+      indexFile.saveSync();
+    }
+
+    return filesPaths;
   }
 
   createBuildMeta() {

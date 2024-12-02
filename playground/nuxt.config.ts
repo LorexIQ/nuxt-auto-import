@@ -4,7 +4,8 @@ export default defineNuxtConfig({
   ],
 
   modules: [
-    '../src/module',
+    // '../src/module',
+    '../dist/module',
     '@nuxthub/core'
   ],
 
@@ -13,6 +14,16 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   compatibilityDate: '2024-11-11',
+
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern'
+        }
+      }
+    }
+  },
 
   autoImport: {
     connectors: [
