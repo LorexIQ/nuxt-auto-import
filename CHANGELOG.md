@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v1.2.3
+
+[compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.2.2...v1.2.3)
+
+### 🏡 Chore
+
+- Добавлен скрипт npm run deploy для развёртывания в NuxtHub ([1444a4e](https://github.com/LorexIQ/nuxt-auto-import/commit/1444a4e))
+- Изменена генерация типов ([bca126f](https://github.com/LorexIQ/nuxt-auto-import/commit/bca126f))
+
+### ❤️ Contributors
+
+- LorexIQ <i@liq-mail.ru>
+
 ## v1.2.2
 
 [compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.2.1...v1.2.2)
