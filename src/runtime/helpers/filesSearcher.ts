@@ -10,6 +10,8 @@ import type { ModuleClass } from '../autoImport';
 import loadTsModule from './loadTsModule';
 import logger from './logger';
 
+const idRepeatCounter: Record<string, number> = {};
+
 function checkIsFile(path: string) {
   return path.endsWith('.ts') && !path.endsWith('.d.ts');
 }
@@ -75,8 +77,14 @@ async function pathToModuleFSReturn(config: Required<ModuleFSConfig>, rootPath: 
   if (cache.includes(snakeCaseName)) return { path: filePath, error: 'name_duplicate' };
   else cache.push(snakeCaseName);
 
+  let id = snakeCaseName.toUpperCase();
+  if (idRepeatCounter[id]) idRepeatCounter[id]++;
+  else idRepeatCounter[id] = 1;
+
+  id = `${idRepeatCounter[id]}_${id}`;
+
   return {
-    id: `AI_${snakeCaseName.toUpperCase()}`,
+    id: `AI_${id}`,
     name: {
       snakeCase: snakeCaseName,
       camelCase: camelCaseName
