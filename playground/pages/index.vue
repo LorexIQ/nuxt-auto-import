@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AutoImportIcons } from '../../dist/types';
+import type { AutoImportIcons } from 'nuxt-auto-import';
 
 const autoImport = useAutoImport();
 const icons = autoImport.defines.icons;

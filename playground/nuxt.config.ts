@@ -4,8 +4,9 @@ export default defineNuxtConfig({
   ],
 
   modules: [
-    // '../src/module',
-    '../dist/module',
+    '../src/module',
+    // '../dist/module',
+    // 'nuxt-auto-import',
     '@nuxthub/core'
   ],
 

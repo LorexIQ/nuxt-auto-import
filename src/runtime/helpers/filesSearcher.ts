@@ -76,7 +76,7 @@ async function pathToModuleFSReturn(config: Required<ModuleFSConfig>, rootPath: 
   else cache.push(snakeCaseName);
 
   return {
-    id: `AI${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+    id: `AI_${snakeCaseName.toUpperCase()}`,
     name: {
       snakeCase: snakeCaseName,
       camelCase: camelCaseName
