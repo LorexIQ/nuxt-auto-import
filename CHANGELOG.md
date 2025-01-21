@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.2.5
+
+[compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.2.4...v1.2.5)
+
+### 🩹 Fixes
+
+- Исправлен баг с перезаписью ID и ошибке 500 кэша при перезапуске клиента ([25b665b](https://github.com/LorexIQ/nuxt-auto-import/commit/25b665b))
+
+### ❤️ Contributors
+
+- LorexIQ <dmitrymurashko0@gmail.com>
+
 ## v1.2.4
 
 [compare changes](https://github.com/LorexIQ/nuxt-auto-import/compare/v1.2.3...v1.2.4)
